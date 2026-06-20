@@ -1,0 +1,28 @@
+# Cloudflare Pages _redirects
+# 
+# IMPORTANT: Replace YOUR_TUNNEL_URL with your actual cloudflared tunnel URL
+# Get it by running: cloudflared tunnel --url http://localhost:8000
+#
+# Example: /health https://violations-desert-proposed-modules.trycloudflare.com/health 200
+#
+# NOTE: This file is auto-generated. For dynamic config, use the Tunnel Config UI:
+#   http://localhost:8000/tunnel-config
+
+# API Routes → proxy to local backend via cloudflared tunnel
+# ↓↓↓ PASTE YOUR TUNNEL URL BELOW (remove the # and replace YOUR_TUNNEL_URL) ↓↓↓
+# /health      YOUR_TUNNEL_URL/health      200
+# /macro-cycle YOUR_TUNNEL_URL/macro-cycle 200
+# /presets     YOUR_TUNNEL_URL/presets     200
+# /simulate    YOUR_TUNNEL_URL/simulate    200
+# /vasicek/*   YOUR_TUNNEL_URL/vasicek/:splat 200
+# /sensitivity/* YOUR_TUNNEL_URL/sensitivity/:splat 200
+# /cache/*     YOUR_TUNNEL_URL/cache/:splat 200
+
+# If using Cloudflare Pages Functions (_middleware.js), leave all routes commented
+# and set TUNNEL_URL in Pages environment variables instead.
+
+# Static assets served by Cloudflare Pages CDN
+/static/*    /static/:splat          200
+
+# SPA catch-all (must be last)
+/*           /index.html              200

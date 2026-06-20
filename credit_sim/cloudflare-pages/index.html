@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Cloudflare Pages - Tunnel Config | Auto Finance LTR</title>
+<style>
+:root{--bg:#090d16;--bg2:#0f1724;--card:#121b2d;--card2:#1a2740;--b:#1e3456;--b2:#2a4a6a;--t:#e2e8f0;--t2:#8ba3c0;--t3:#5a7a9a;--a:#38bdf8;--a2:#0284c7;--ag:rgba(56,189,248,.12);--g:#22c55e;--o:#f59e0b;--r:#ef4444;--r12:12px;--r8:8px;--sh:0 4px 24px rgba(0,0,0,.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+.c{max-width:720px;margin:0 auto;padding:20px}
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;margin-bottom:20px;background:linear-gradient(135deg,var(--bg2),var(--bg));border-radius:var(--r12);border:1px solid var(--b)}
+.hl{display:flex;align-items:center;gap:10px}
+.lg{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--a2),var(--a));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+h1{font-size:16px;font-weight:600;background:linear-gradient(135deg,var(--a),#818cf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.cd{background:var(--card);border-radius:var(--r12);border:1px solid var(--b);padding:20px;margin-bottom:16px}
+.cd:hover{border-color:var(--b2)}
+.cd-t{font-size:11px;font-weight:600;margin-bottom:14px;color:var(--a);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:6px}
+.cd-t::before{content:'';width:3px;height:12px;background:var(--a);border-radius:2px}
+label{font-size:12px;color:var(--t2);display:block;margin-bottom:4px;font-weight:500}
+.inp{width:100%;padding:10px 12px;background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r8);color:var(--t);font-size:13px;outline:none;transition:border .2s}
+.inp:focus{border-color:var(--a)}
+.inp::placeholder{color:var(--t3)}
+.btn{padding:10px 18px;font-size:13px;font-weight:600;border:none;border-radius:var(--r8);cursor:pointer;transition:all .2s}
+.btn-p{background:linear-gradient(135deg,var(--a2),var(--a));color:#fff;width:100%}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--ag)}
+.btn-s{background:var(--card2);color:var(--a);border:1px solid var(--b2);padding:7px 12px;font-size:11px}
+.btn-s:hover{background:var(--b2)}
+.btn-g{background:var(--g);color:#fff}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:500px){.g2{grid-template-columns:1fr}}
+.st{background:var(--bg2);border-radius:var(--r8);padding:12px 14px;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all;border:1px solid var(--b);color:var(--t2);max-height:200px;overflow-y:auto}
+.st .ok{color:var(--g);font-weight:700}
+.st .err{color:var(--r);font-weight:700}
+.st .hl{color:var(--a)}
+.st .dim{color:var(--t3)}
+.st .cp{color:var(--o)}
+.sr{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.badge-ok{background:var(--gg);color:var(--g)}
+.badge-err{background:var(--rg);color:var(--r)}
+.badge-warn{background:rgba(245,158,11,.15);color:var(--o)}
+.msg{padding:10px 14px;border-radius:var(--r8);font-size:12px;margin-top:8px;display:none}
+.msg-ok{display:block;background:var(--gg);border:1px solid var(--g);color:var(--g)}
+.msg-err{display:block;background:var(--rg);border:1px solid var(--r);color:var(--r)}
+.msg-warn{display:block;background:rgba(245,158,11,.1);border:1px solid var(--o);color:var(--o)}
+.copy-btn{background:var(--card2);border:1px solid var(--b2);color:var(--a);padding:4px 10px;font-size:10px;border-radius:4px;cursor:pointer;transition:.2s}
+.copy-btn:hover{background:var(--b2)}
+</style>
+</head>
+<body>
+<div class="c">
+<header class="hdr">
+<div class="hl"><div class="lg">CF</div><h1>Cloudflare Pages Tunnel Config</h1></div>
+</header>
+
+<div class="cd">
+<div class="cd-t">TUNNEL URL</div>
+<label for="tunnel-url">Enter your cloudflared tunnel URL (e.g., https://xxx.trycloudflare.com)</label>
+<div style="display:flex;gap:8px">
+<input class="inp" id="tunnel-url" type="url" placeholder="https://your-tunnel.trycloudflare.com" spellcheck="false">
+</div>
+<div class="sr">
+<button class="btn btn-s" onclick="saveTunnel()">💾 Save Tunnel URL</button>
+<button class="btn btn-s" onclick="testTunnel()">🔍 Test Connection</button>
+<button class="btn btn-s" onclick="generateConfig()">⚙️ Generate Config</button>
+</div>
+<div id="status-msg" class="msg"></div>
+</div>
+
+<div class="cd">
+<div class="cd-t">CONNECTION STATUS</div>
+<div class="g2">
+<div class="mc" style="background:var(--bg2);padding:12px;border-radius:var(--r8);border:1px solid var(--b)">
+<div style="font-size:10px;color:var(--t3);text-transform:uppercase">Backend</div>
+<div style="font-size:14px;font-weight:600;margin-top:4px" id="be-status">⏳ Checking...</div>
+</div>
+<div class="mc" style="background:var(--bg2);padding:12px;border-radius:var(--r8);border:1px solid var(--b)">
+<div style="font-size:10px;color:var(--t3);text-transform:uppercase">Tunnel</div>
+<div style="font-size:14px;font-weight:600;margin-top:4px" id="tunnel-status">⏳ Waiting...</div>
+</div>
+</div>
+</div>
+
+<div class="cd">
+<div class="cd-t">_redirects CONFIG</div>
+<p style="font-size:11px;color:var(--t2);margin-bottom:10px;line-height:1.5">
+Copy this into <code style="background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:10px">frontend/_redirects</code> 
+(or <code style="background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:10px">cloudflare-pages/_redirects</code>):
+</p>
+<div style="position:relative">
+<button class="copy-btn" onclick="copyRedirects()" style="position:absolute;top:8px;right:8px;z-index:1">📋 Copy</button>
+<div class="st" id="redirects-preview"># Enter tunnel URL first → click "Generate Config"</div>
+</div>
+</div>
+
+<div class="cd">
+<div class="cd-t">HOW TO USE</div>
+<div style="font-size:12px;color:var(--t2);line-height:1.8">
+<strong style="color:var(--a)">Step 1:</strong> On your local machine, run:<br>
+<code style="background:var(--bg2);padding:2px 6px;border-radius:4px;font-size:11px">start_public.bat</code> — starts both backend + tunnel<br><br>
+<strong style="color:var(--a)">Step 2:</strong> Copy the tunnel URL (https://xxx.trycloudflare.com) from terminal<br><br>
+<strong style="color:var(--a)">Step 3:</strong> Paste it above, click <strong>"Save Tunnel URL"</strong><br><br>
+<strong style="color:var(--a)">Step 4:</strong> Click <strong>"Generate Config"</strong> → copy the <code style="background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:10px">_redirects</code> content<br><br>
+<strong style="color:var(--a)">Step 5:</strong> Deploy to Cloudflare Pages (upload <code style="background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:10px">frontend/</code> with the new <code style="background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:10px">_redirects</code>)<br><br>
+<div style="background:var(--bg2);padding:10px 12px;border-radius:var(--r8);border-left:3px solid var(--o);margin-top:6px">
+⚠️ Tunnel URL changes every time cloudflared restarts. Update <code style="background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:10px">_redirects</code> and redeploy Pages.
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const STORAGE_KEY = 'cf_tunnel_url';
+
+function getSavedUrl() {
+  const u = localStorage.getItem(STORAGE_KEY) || '';
+  if (u) document.getElementById('tunnel-url').value = u;
+  if (u) generateConfig();
+  return u;
+}
+function saveTunnel() {
+  const url = document.getElementById('tunnel-url').value.trim();
+  if (!url) {
+    showMsg('Please enter a tunnel URL', 'err');
+    return;
+  }
+  if (!url.startsWith('https://')) {
+    showMsg('URL must start with https://', 'err');
+    return;
+  }
+  localStorage.setItem(STORAGE_KEY, url);
+  showMsg('Tunnel URL saved! Click "Generate Config" to create _redirects', 'ok');
+  generateConfig();
+}
+
+async function testTunnel() {
+  const url = document.getElementById('tunnel-url').value.trim();
+  if (!url) { showMsg('Enter tunnel URL first', 'err'); return; }
+  
+  const msg = document.getElementById('status-msg');
+  msg.className = 'msg msg-warn';
+  msg.textContent = '⏳ Testing tunnel connection...';
+  msg.style.display = 'block';
+  
+  document.getElementById('tunnel-status').textContent = '⏳ Testing...';
+  
+  try {
+    const resp = await fetch(url + '/health', { 
+      mode: 'no-cors',
+      signal: AbortSignal.timeout(5000) 
+    });
+    document.getElementById('tunnel-status').innerHTML = '✅ <span style="color:var(--g)">Connected</span>';
+    showMsg('✅ Tunnel is reachable!', 'ok');
+  } catch (e) {
+    document.getElementById('tunnel-status').innerHTML = '❌ <span style="color:var(--r)">Unreachable</span>';
+    showMsg('❌ Cannot reach tunnel. Make sure cloudflared is running on your server.', 'err');
+  }
+}
+
+async function generateConfig() {
+  const url = document.getElementById('tunnel-url').value.trim();
+  if (!url) {
+    document.getElementById('redirects-preview').innerHTML = 
+      '<span class="err">⚠️ Enter tunnel URL first</span>';
+    return;
+  }
+  
+  const cleanUrl = url.replace(/\/+$/, '');
+  const config = `# Cloudflare Pages _redirects
+# Auto-generated by Tunnel Config UI
+# Tunnel URL: ${cleanUrl}
+
+# API Routes → proxy to local backend via tunnel
+/health      ${cleanUrl}/health      200
+/macro-cycle ${cleanUrl}/macro-cycle 200
+/presets     ${cleanUrl}/presets     200
+/simulate    ${cleanUrl}/simulate    200
+/vasicek/*   ${cleanUrl}/vasicek/:splat 200
+/sensitivity/* ${cleanUrl}/sensitivity/:splat 200
+/cache/*     ${cleanUrl}/cache/:splat 200
+
+# Full-cycle and batch simulation endpoints
+/simulate/*  ${cleanUrl}/simulate/:splat 200
+
+# Static assets → served by Cloudflare Pages CDN
+/static/*    /static/:splat          200
+
+# SPA catch-all: all other routes → index.html
+/*           /index.html              200`;
+
+  document.getElementById('redirects-preview').innerHTML = 
+    config.replace(/</g, '<').replace(/>/g, '>');
+  showMsg('✅ Config generated! Copy the _redirects content above.', 'ok');
+}
+
+async function copyRedirects() {
+  const el = document.getElementById('redirects-preview');
+  const text = el.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    const btn = document.querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  } catch {
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+  }
+}
+
+function showMsg(text, type) {
+  const msg = document.getElementById('status-msg');
+  msg.className = 'msg msg-' + type;
+  msg.textContent = text;
+  msg.style.display = 'block';
+}
+
+async function checkBackend() {
+  try {
+    const resp = await fetch('/health', { signal: AbortSignal.timeout(3000) });
+    if (resp.ok) {
+      document.getElementById('be-status').innerHTML = 
+        '✅ <span style="color:var(--g)">Running</span>';
+    }
+  } catch {
+    document.getElementById('be-status').textContent = '🌐 Remote mode';
+  }
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = getSavedUrl();
+  if (saved) {
+    document.getElementById('tunnel-status').innerHTML = 
+      '💾 <span style="color:var(--a)">Saved</span>';
+  }
+  checkBackend();
+});
+</script>
+</body>
+</html>
