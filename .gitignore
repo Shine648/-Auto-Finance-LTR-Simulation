@@ -1,0 +1,30 @@
+# === Privacy / Sensitive Data ===
+auto_finance_credit_portfolio.csv
+credit_sim/data/portfolio.json
+credit_sim/data/cache/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# === IDE / OS ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === Python ===
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# === Runtime ===
+*.log
+
+# === .project directory (ignore all) ===
+.project/
