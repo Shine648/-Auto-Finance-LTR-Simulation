@@ -142,9 +142,10 @@ def _build_result(scenario: ScenarioInput, raw: dict) -> SimulationResult:
     )
 
 # ---- Frontend (Define BEFORE static mount) ----
-FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.join(BASE_DIR, '..', 'frontend')
 FRONTEND_FILE = os.path.join(FRONTEND_DIR, 'index.html')
-CLOUDFLARE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cloudflare-pages')
+CLOUDFLARE_DIR = os.path.join(BASE_DIR, 'cloudflare-pages')
 TUNNEL_CONFIG_FILE = os.path.join(CLOUDFLARE_DIR, 'index.html')
 
 @app.get("/")
