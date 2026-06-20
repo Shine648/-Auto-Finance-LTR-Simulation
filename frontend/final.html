@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Auto Finance LTR Simulation | 汽车金融损失率模拟</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#090d16;--bg2:#0f1724;--card:#121b2d;--card2:#1a2740;--b:#1e3456;--b2:#2a4a6a;--t:#e2e8f0;--t2:#8ba3c0;--t3:#5a7a9a;--a:#38bdf8;--a2:#0284c7;--ag:rgba(56,189,248,.12);--g:#22c55e;--o:#f59e0b;--r:#ef4444;--rg:rgba(239,68,68,.1);--gg:rgba(34,197,94,.1);--r12:12px;--r8:8px;--sh:0 4px 24px rgba(0,0,0,.4)}
+[data-theme="light"]{--bg:#f1f5f9;--bg2:#e2e8f0;--card:#ffffff;--card2:#f8fafc;--b:#cbd5e1;--b2:#94a3b8;--t:#0f172a;--t2:#475569;--t3:#64748b;--a:#0284c7;--a2:#0369a1;--ag:rgba(2,132,199,.1);--g:#16a34a;--o:#d97706;--r:#dc2626;--rg:rgba(220,38,38,.08);--gg:rgba(22,163,74,.08);--sh:0 4px 24px rgba(0,0,0,.08)}
+[data-theme="dark"]{--bg:#090d16;--bg2:#0f1724;--card:#121b2d;--card2:#1a2740;--b:#1e3456;--b2:#2a4a6a;--t:#e2e8f0;--t2:#8ba3c0;--t3:#5a7a9a;--a:#38bdf8;--a2:#0284c7;--ag:rgba(56,189,248,.12);--g:#22c55e;--o:#f59e0b;--r:#ef4444;--rg:rgba(239,68,68,.1);--gg:rgba(34,197,94,.1);--sh:0 4px 24px rgba(0,0,0,.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;transition:background .25s,color .25s}
+.c{max-width:1200px;margin:0 auto;padding:16px}
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;margin-bottom:20px;background:linear-gradient(135deg,var(--bg2) 0%,var(--bg) 100%);border-radius:var(--r12);border:1px solid var(--b);box-shadow:var(--sh);flex-wrap:wrap;gap:8px}
+.hl{display:flex;align-items:center;gap:10px}
+.lg{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--a2),var(--a));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.hdr h1{font-size:16px;font-weight:600;background:linear-gradient(135deg,var(--a),#818cf8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hdr .sb{font-size:10px;color:var(--t3)}
+.hr{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ts,.ls{display:flex;background:var(--card);border-radius:6px;border:1px solid var(--b);overflow:hidden}
+.ts button,.ls button{padding:4px 8px;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--t3);transition:.2s;line-height:1}
+.ts button.on,.ls button.on{background:var(--a2);color:#fff}
+.cd{background:var(--card);border-radius:var(--r12);border:1px solid var(--b);padding:18px;margin-bottom:16px;transition:border .2s}
+.cd:hover{border-color:var(--b2)}
+.cd-t{font-size:11px;font-weight:600;margin-bottom:12px;color:var(--a);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:6px}
+.cd-t::before{content:'';width:3px;height:12px;background:var(--a);border-radius:2px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:900px){.g2{grid-template-columns:1fr}}
+@media(max-width:600px){.g4{grid-template-columns:1fr 1fr}}
+.mc{background:var(--card2);border-radius:var(--r8);padding:10px 12px;border:1px solid var(--b)}
+.ml{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;font-weight:500}
+.mv{font-size:20px;font-weight:700;margin-top:2px;line-height:1.2}
+.mo{color:var(--o)}.mr{color:var(--r)}.mb{color:var(--a)}.mg{color:var(--g)}
+.sl-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sl-label{font-size:11px;color:var(--t2);min-width:75px;font-weight:500}
+.sl-val{font-size:13px;font-weight:700;min-width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.sl-unit{font-size:10px;color:var(--t3);min-width:14px}
+input[type=range]{flex:1;-webkit-appearance:none;-moz-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--b2);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--a);cursor:pointer;border:2px solid var(--card)}
+.btn{padding:8px 14px;font-size:12px;font-weight:600;border:none;border-radius:var(--r8);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.btn-p{background:linear-gradient(135deg,var(--a2),var(--a));color:#fff;width:100%}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--ag)}
+.btn-s{background:var(--card2);color:var(--a);border:1px solid var(--b2);padding:5px 10px;font-size:11px}
+.btn-s:hover{background:var(--b2)}
+.ch{width:100%;height:300px;border-radius:var(--r8);overflow:hidden}
+.ch2{width:100%;height:200px;border-radius:var(--r8);overflow:hidden}
+.tw{overflow-x:auto;border-radius:var(--r8);border:1px solid var(--b)}
+table{width:100%;border-collapse:collapse;font-size:11px}thead{background:var(--bg2)}
+th{padding:7px 10px;text-align:left;color:var(--t2);font-weight:500;font-size:9px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--b)}
+td{padding:7px 10px;border-bottom:1px solid var(--b)}
+tr:hover td{background:var(--bg2)}tr.hl td{background:var(--card2);border-left:3px solid var(--a)}
+.sh{font-size:11px;color:var(--o);margin:6px 0;display:none}.sh.s{display:block}
+.h{display:none!important}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(9,13,22,.88);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(8px)}
+.ob{background:var(--card);padding:24px 32px;border-radius:var(--r12);border:1px solid var(--b);text-align:center;box-shadow:var(--sh)}
+.sp{width:32px;height:32px;border:3px solid var(--b);border-top-color:var(--a);border-radius:50%;animation:s .65s linear infinite;margin:0 auto 8px}
+@keyframes s{to{transform:rotate(360deg)}}
+.lt{font-size:12px;color:var(--t2)}
+#decomp{font-size:14px;padding:10px 14px;background:var(--bg2);border-radius:var(--r8);text-align:center;margin-top:8px;line-height:1.6;border:1px solid var(--b)}
+.decomp-v{font-size:18px;font-weight:700}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cd,.mc{animation:fade .35s ease-out}
+</style>
+</head>
+<body>
+<div class="c">
+<header class="hdr">
+<div class="hl"><div class="lg" id="logo">LTR</div><div><h1 id="title">Auto Finance LTR Simulation</h1><div class="sb" id="subtitle">Multi-Factor Monte Carlo</div></div></div>
+<div class="hr">
+<div class="ts" id="theme-switcher">
+<button onclick="setTheme('light')" id="tl">☀</button>
+<button onclick="setTheme('system')" id="ts" class="on">🖥</button>
+<button onclick="setTheme('dark')" id="td">🌙</button>
+</div>
+<div class="ls"><button onclick="setL('en')" id="l-en" class="on">EN</button><button onclick="setL('zh')" id="l-zh">中文</button></div>
+</div>
+</header>
+
+<div class="g2">
+<div class="cd">
+<div class="cd-t"><span id="t-scenario">SCENARIO CONTROLS</span></div>
+<div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:4px">
+<button class="btn btn-s" onclick="run('baseline')">Baseline</button>
+<button class="btn btn-s" onclick="run('mild')">Mild Rec</button>
+<button class="btn btn-s" onclick="run('severe')">Severe Rec</button>
+<button class="btn btn-s" onclick="run('boom')">Boom</button>
+<button class="btn btn-s" onclick="run('housing')">Housing Crisis</button>
+</div>
+<div class="sl-row"><span class="sl-label">GDP</span><input type="range" id="gdp" min="-6" max="8" step="0.1" value="2" oninput="u();r()"><span class="sl-val" id="gdp-v">2.0</span><span class="sl-unit">%</span></div>
+<div class="sl-row"><span class="sl-label" id="l-unemp">Unemployment</span><input type="range" id="unemp" min="2" max="15" step="0.1" value="4.5" oninput="u();r()"><span class="sl-val" id="unemp-v">4.5</span><span class="sl-unit">%</span></div>
+<div class="sl-row"><span class="sl-label" id="l-housing">Housing Price</span><input type="range" id="hpc" min="-20" max="15" step="0.5" value="0" oninput="u();r()"><span class="sl-val" id="hpc-v">0.0</span><span class="sl-unit">%</span></div>
+<div class="sl-row"><span class="sl-label" id="l-sims">Simulations</span><select id="nsim" style="flex:1;padding:6px;font-size:12px;background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r8);color:var(--t);outline:none"><option value="500">500</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></div>
+<button class="btn btn-p" onclick="r()" style="margin-top:4px">▶ <span id="btn-run">Run Simulation</span></button>
+<hr style="margin:12px 0;border:none;border-top:1px solid var(--b)">
+<div class="sl-row"><span class="sl-label" id="l-year">Cycle Year</span><select id="year-select" style="flex:1;padding:6px;font-size:12px;background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r8);color:var(--t);outline:none" onchange="runYear()"></select></div>
+<div style="display:flex;gap:6px;margin-top:6px">
+<button class="btn btn-s" onclick="loadCycle()" style="flex:1"><span id="btn-cycle">📊 Full 8-Year Cycle</span></button>
+<button class="btn btn-s" onclick="loadGDP()" style="flex:1">📈 GDP Curve</button>
+</div>
+<div id="phase-display" style="display:none;margin-top:8px;padding:8px 10px;background:linear-gradient(135deg,var(--card2),transparent);border-radius:var(--r8);border-left:3px solid var(--a)">
+<div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--a2),var(--a));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0" id="py">Y1</div><div><div style="font-size:14px;font-weight:600" id="pne">Expansion</div><div style="font-size:10px;color:var(--t3);margin-top:1px" id="pnc">稳步扩张期</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px">
+<div style="background:var(--card2);border-radius:6px;padding:6px;text-align:center;border:1px solid var(--b)"><div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px">GDP</div><div style="font-size:14px;font-weight:700;margin-top:1px" id="pg">6.0%</div></div>
+<div style="background:var(--card2);border-radius:6px;padding:6px;text-align:center;border:1px solid var(--b)"><div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px">Unemployment</div><div style="font-size:14px;font-weight:700;margin-top:1px" id="pu">4.2%</div></div>
+<div style="background:var(--card2);border-radius:6px;padding:6px;text-align:center;border:1px solid var(--b)"><div style="font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px">Housing</div><div style="font-size:14px;font-weight:700;margin-top:1px" id="ph">+2.0%</div></div>
+</div>
+</div>
+</div>
+
+<div class="cd">
+<div class="cd-t"><span id="t-metrics">KEY METRICS</span></div>
+<div class="g4">
+<div class="mc"><div class="ml" id="ml-el">Expected Loss</div><div class="mv mo" id="el">—</div></div>
+<div class="mc"><div class="ml" id="ml-var99">VaR 99%</div><div class="mv mr" id="v99">—</div></div>
+<div class="mc"><div class="ml" id="ml-lr">Loss Rate</div><div class="mv mr" id="lr">—</div></div>
+<div class="mc"><div class="ml" id="ml-def">Avg Defaults</div><div class="mv" id="def">—</div></div>
+</div>
+</div>
+</div>
+
+<div class="cd">
+<div class="cd-t"><span id="t-el">EL = PD × LGD × EAD</span></div>
+<div class="g4">
+<div class="mc"><div class="ml" id="ml-pd">违约概率 PD</div><div class="mv mg" id="pd">—</div></div>
+<div class="mc"><div class="ml" id="ml-lgd">违约损失率 LGD</div><div class="mv mb" id="lgd">—</div></div>
+<div class="mc"><div class="ml" id="ml-elval">解析预期损失 EL</div><div class="mv mo" id="elv">—</div></div>
+<div class="mc"><div class="ml" id="ml-eck">EL = PD×LGD×EAD</div><div class="mv" id="eck">—</div></div>
+</div>
+<div id="decomp" style="font-size:15px;padding:12px 14px;background:var(--bg2);border-radius:var(--r8);text-align:center;margin-top:8px;line-height:1.6;border:1px solid var(--b)">⏳ <span id="t-loading">Loading...</span></div>
+</div>
+
+<div class="g2">
+<div class="cd"><div class="cd-t" id="t-dist">LOSS DISTRIBUTION</div><div id="chart" class="ch"></div></div>
+<div class="cd"><div class="cd-t" id="t-sensi">GDP SENSITIVITY</div><div id="gchart" class="ch"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--t3);font-size:12px" id="gsp">📈 <span id="t-click-gdp">Click to load</span></div></div></div>
+</div>
+
+<div class="cd h" id="cycle-box">
+<div class="cd-t"><span id="t-cycle">LTR CYCLE</span></div>
+<div id="cchart" class="ch2"></div>
+<div class="tw" style="margin-top:8px"><table><thead><tr>
+<th id="th-year">Year</th><th id="th-phase">Phase</th><th id="th-sim">Sim LTR</th><th id="th-tgt">Target</th><th id="th-dev">Dev</th>
+</tr></thead><tbody id="ctb"></tbody></table></div>
+</div>
+
+<div class="ov h" id="lod"><div class="ob"><div class="sp"></div><div class="lt" id="loading-text">Running simulation...</div></div></div>
+
+<script>
+// ====== i18n ======
+const i18n={
+  'logo':{en:'LTR',zh:'LTR'},
+  'title':{en:'Auto Finance LTR Simulation',zh:'汽车金融损失率模拟'},
+  'subtitle':{en:'Multi-Factor Monte Carlo',zh:'多因子蒙特卡洛模拟'},
+  't-scenario':{en:'SCENARIO CONTROLS',zh:'情景控制'},
+  't-metrics':{en:'KEY METRICS',zh:'核心指标'},
+  't-el':{en:'EL = PD × LGD × EAD',zh:'EL = PD × LGD × EAD'},
+  't-dist':{en:'LOSS DISTRIBUTION',zh:'损失分布'},
+  't-sensi':{en:'GDP SENSITIVITY',zh:'GDP敏感度'},
+  't-cycle':{en:'LTR CYCLE',zh:'损失率周期'},
+  'l-unemp':{en:'Unemployment',zh:'失业率'},
+  'l-housing':{en:'Housing Price',zh:'房价'},
+  'l-sims':{en:'Simulations',zh:'模拟次数'},
+  'btn-run':{en:'Run Simulation',zh:'运行模拟'},
+  'ml-el':{en:'Expected Loss',zh:'预期损失'},
+  'ml-var99':{en:'VaR 99%',zh:'VaR 99%'},
+  'ml-lr':{en:'Loss Rate',zh:'损失率'},
+  'ml-def':{en:'Avg Defaults',zh:'平均违约'},
+  'ml-pd':{en:'PD (scenario)',zh:'违约概率 PD'},
+  'ml-lgd':{en:'LGD (scenario)',zh:'违约损失率 LGD'},
+  'ml-elval':{en:'Analytical EL',zh:'解析预期损失 EL'},
+  'ml-eck':{en:'EL = PD×LGD×EAD',zh:'EL = PD×LGD×EAD'},
+  't-loading':{en:'Loading...',zh:'加载中...'},
+  't-click-gdp':{en:'Click to load',zh:'点击加载'},
+  'th-year':{en:'Year',zh:'年份'},'th-phase':{en:'Phase',zh:'阶段'},
+  'th-sim':{en:'Sim LTR',zh:'模拟LTR'},'th-tgt':{en:'Target',zh:'目标'},
+  'th-dev':{en:'Dev',zh:'偏差'},
+  'loading-text':{en:'Running simulation...',zh:'运行模拟中...'},
+  'l-year':{en:'Cycle Year',zh:'周期年份'},
+  'btn-cycle':{en:'Full 8-Year Cycle',zh:'完整八年周期'},
+};
+
+let LN='en',myChart=null,gChart=null,cChart=null,cycleData=null,cyclePhases=null;
+
+function applyLang(){
+  for(const[id,pair]of Object.entries(i18n)){
+    const el=document.getElementById(id);
+    if(el)el.textContent=pair[LN];
+  }
+}
+
+// ====== Theme ======
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('theme',t);
+  document.querySelectorAll('.ts button').forEach(b=>b.className='');
+  if(t==='light')document.getElementById('tl').className='on';
+  else if(t==='dark')document.getElementById('td').className='on';
+  else document.getElementById('ts').className='on';
+  if(myChart){myChart.dispose();gChart&&gChart.dispose();cChart&&cChart.dispose();myChart=null;gChart=null;cChart=null;if(cycleData)loadCycleChart()}
+}
+function getPreferredTheme(){return localStorage.getItem('theme')||'system'}
+function getEffectiveTheme(){
+  const t=document.documentElement.getAttribute('data-theme')||'system';
+  return t==='system'?(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'):t;
+}
+window.matchMedia('(prefers-color-scheme:light)').addEventListener('change',()=>{
+  const t=document.documentElement.getAttribute('data-theme');
+  if(t==='system'||!t){if(myChart){myChart.dispose();gChart&&gChart.dispose();cChart&&cChart.dispose();myChart=null;gChart=null;cChart=null}r()}
+});
+
+function setL(l){
+  LN=l;
+  document.getElementById('l-en').className=l==='en'?'on':'';
+  document.getElementById('l-zh').className=l==='zh'?'on':'';
+  applyLang();
+  if(cyclePhases){
+    const sel=document.getElementById('year-select');
+    cyclePhases.phases.forEach((p,i)=>{
+      if(sel.options[i])sel.options[i].textContent=LN==='zh'?'Y'+p.year+': '+p.phase_cn:'Y'+p.year+': '+p.phase_en;
+    });
+  }
+  if(cyclePhases)runYear();
+}
+
+// ====== UI ======
+function u(){
+  document.getElementById('gdp-v').textContent=parseFloat(document.getElementById('gdp').value).toFixed(1);
+  document.getElementById('unemp-v').textContent=parseFloat(document.getElementById('unemp').value).toFixed(1);
+  document.getElementById('hpc-v').textContent=parseFloat(document.getElementById('hpc').value).toFixed(1);
+}
+function run(p){
+  const v={baseline:{g:2,u:4.5,h:0},mild:{g:.5,u:6,h:-3},severe:{g:-2,u:9,h:-10},boom:{g:4,u:3,h:8},housing:{g:1,u:7,h:-15}}[p];
+  if(v){document.getElementById('gdp').value=v.g;document.getElementById('unemp').value=v.u;document.getElementById('hpc').value=v.h;u()}
+  r();
+}
+async function r(){
+  const g=parseFloat(document.getElementById('gdp').value),u=parseFloat(document.getElementById('unemp').value),h=parseFloat(document.getElementById('hpc').value),n=parseInt(document.getElementById('nsim').value);
+  document.getElementById('decomp').textContent='⏳ '+i18n['t-loading'][LN];
+  try{
+    const resp=await fetch('/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gdp_growth:g,unemployment:u,house_price_change:h,n_simulations:n,method:'monte_carlo'})});
+    const d=await resp.json();
+    const fp=v=>v!=null?(v*100).toFixed(3)+'%':'—';
+    const fv=v=>{if(v==null||isNaN(v))return'—';if(v>=1e9)return(v/1e9).toFixed(2)+'B';if(v>=1e6)return(v/1e6).toFixed(2)+'M';return v.toFixed(2)};
+    document.getElementById('el').textContent=fv(d.mean_loss);
+    document.getElementById('v99').textContent=fv(d.var_99);
+    document.getElementById('lr').textContent=fp(d.loss_rate);
+    document.getElementById('def').textContent=d.n_defaults_mean.toFixed(0);
+    document.getElementById('pd').innerHTML=fp(d.pd_scenario)+' <span style="font-size:10px;color:var(--t3)">('+(LN==='zh'?'基':'base')+':'+fp(d.pd_base)+')</span>';
+    document.getElementById('lgd').innerHTML=fp(d.lgd_scenario)+' <span style="font-size:10px;color:var(--t3)">('+(LN==='zh'?'基':'base')+':'+fp(d.lgd_base)+')</span>';
+    document.getElementById('elv').textContent=fv(d.analytical_el);
+    document.getElementById('eck').textContent=fv(d.pd_scenario*d.lgd_scenario*d.total_exposure);
+    document.getElementById('decomp').innerHTML=
+      '<span style="color:var(--g)">PD</span> = '+fp(d.pd_scenario)+
+      ' &times; <span style="color:var(--a)">LGD</span> = '+fp(d.lgd_scenario)+
+      ' &times; <span style="color:#a78bfa">EAD</span> = '+fv(d.total_exposure)+
+      ' = <span style="color:var(--o);font-size:20px;font-weight:700">'+fv(d.analytical_el)+'</span>'+
+      '<br><span style="color:var(--t3);font-size:11px">MC: '+fv(d.mean_loss)+' | '+d.scenario_label+'</span>';
+    // Chart - improved histogram
+    if(!myChart)myChart=echarts.init(document.getElementById('chart'),getEffectiveTheme()==='dark'?'dark':undefined);
+    const maxCount=Math.max(...d.histogram.counts);
+    myChart.setOption({
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},
+        formatter:function(p){
+          const idx=p[0].dataIndex;
+          const s=d.histogram.bins[idx],e=d.histogram.bins[idx+1];
+          return'<strong>'+LN==='zh'?'损失范围':'Loss Range'+'</strong><br/>$'+fv(s)+' — $'+fv(e)+'<br/>'+'Frequency: <strong>'+p[0].value+'</strong>'
+        }
+      },
+      grid:{left:70,right:25,top:20,bottom:35},
+      xAxis:{type:'value',name:'Loss ($)',axisLabel:{formatter:v=>fv(v),color:'var(--t2)',fontSize:10},splitLine:{lineStyle:{color:'var(--b)',type:'dashed'}}},
+      yAxis:{type:'value',name:'Frequency',axisLabel:{color:'var(--t2)',fontSize:10},splitLine:{lineStyle:{color:'var(--b)',type:'dashed'}}},
+      series:[{type:'bar',data:d.histogram.counts.map((v,i)=>({
+        value:v,itemStyle:{color:v>maxCount*0.8?'#ef4444':v>maxCount*0.5?'#f59e0b':'#38bdf8',borderRadius:[3,3,0,0]}
+      })),barWidth:'98%',
+        markLine:{silent:true,symbol:'none',data:[
+          {xAxis:d.var_95,label:{formatter:'VaR 95%',color:'var(--o)',fontSize:11,position:'insideEndTop'},lineStyle:{color:'var(--o)',type:'dashed',width:2}},
+          {xAxis:d.var_99,label:{formatter:'VaR 99%',color:'var(--r)',fontSize:11,position:'insideEndTop'},lineStyle:{color:'var(--r)',type:'dashed',width:2}},
+          {xAxis:d.mean_loss,label:{formatter:'EL',color:'var(--g)',fontSize:11,position:'insideEndTop'},lineStyle:{color:'var(--g)',type:'solid',width:2}}
+        ]}
+      }]
+    });
+  }catch(e){document.getElementById('decomp').textContent='Error: '+e.message}
+}
+
+// ====== GDP Sensitivity ======
+async function loadGDP(){
+  const n=parseInt(document.getElementById('nsim').value)||2000;
+  document.getElementById('gsp').innerHTML='⏳ '+i18n['t-loading'][LN];
+  try{
+    const r=await fetch('/sensitivity/gdp?gdp_min=-4&gdp_max=6&gdp_steps=11&unemployment=4.5&house_price_change=0&n_simulations='+n+'&method=monte_carlo');
+    const data=await r.json();
+    if(!gChart)gChart=echarts.init(document.getElementById('gchart'),getEffectiveTheme()==='dark'?'dark':undefined);
+    const pts=data.points,gdp=pts.map(p=>p.gdp_growth.toFixed(1)),el=pts.map(p=>+(p.mean_loss/1e6).toFixed(2)),lr=pts.map(p=>+(p.loss_rate*100).toFixed(2));
+    gChart.setOption({
+      tooltip:{trigger:'axis'},
+      legend:{data:['EL (M)','Loss Rate (%)'],textStyle:{color:'var(--t2)'},top:2},
+      grid:{left:55,right:25,top:35,bottom:30},
+      xAxis:{type:'category',data:gdp,axisLabel:{color:'var(--t2)',fontSize:10},axisLine:{lineStyle:{color:'var(--b)'}}},
+      yAxis:[{type:'value',axisLabel:{color:'var(--t2)',fontSize:10},splitLine:{lineStyle:{color:'var(--b)',type:'dashed'}}},{type:'value',axisLabel:{color:'var(--t2)',fontSize:10},splitLine:{show:false}}],
+      series:[{name:'EL (M)',type:'line',data:el,smooth:true,lineStyle:{color:'#38bdf8',width:2},symbol:'circle'},{name:'Loss Rate (%)',type:'line',data:lr,smooth:true,yAxisIndex:1,lineStyle:{color:'#22c55e',width:2},symbol:'triangle'}]
+    });
+  }catch(e){document.getElementById('gsp').textContent='Error'}
+}
+
+// ====== Full Cycle ======
+async function loadCycle(){
+  const n=parseInt(document.getElementById('nsim').value)||2000;
+  document.getElementById('lod').classList.remove('h');
+  try{
+    const r=await fetch('/simulate/cycle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n_simulations:n,method:'monte_carlo'})});
+    cycleData=await r.json();
+    document.getElementById('cycle-box').classList.remove('h');
+    loadCycleChart();loadCycleTable();
+  }catch(e){alert('Error: '+e.message)}
+  document.getElementById('lod').classList.add('h');
+}
+function loadCycleChart(){
+  if(!cycleData)return;
+  if(!cChart)cChart=echarts.init(document.getElementById('cchart'),getEffectiveTheme()==='dark'?'dark':undefined);
+  const y=cycleData.map(p=>'Y'+p.year),s=cycleData.map(p=>+(p.simulated_ltr*100).toFixed(3)),t=cycleData.map(p=>+(p.target_ltr*100).toFixed(3));
+  const sn=LN==='zh'?'模拟':'Sim LTR',tn=LN==='zh'?'目标':'Target';
+  cChart.setOption({
+    tooltip:{trigger:'axis',formatter(p){let r='<strong>'+p[0].axisValue+'</strong><br/>';p.forEach(pp=>r+=pp.seriesName+': <strong>'+pp.value+'%</strong><br/>');return r}},
+    legend:{data:[sn,tn],textStyle:{color:'var(--t2)'},top:2},
+    grid:{left:50,right:20,top:35,bottom:25},
+    xAxis:{type:'category',data:y,axisLabel:{color:'var(--t2)',fontSize:10},axisLine:{lineStyle:{color:'var(--b)'}}},
+    yAxis:{type:'value',name:'LTR (%)',axisLabel:{color:'var(--t2)',fontSize:10},splitLine:{lineStyle:{color:'var(--b)',type:'dashed'}}},
+    series:[{name:sn,type:'bar',data:s,barWidth:'40%',itemStyle:{borderRadius:[4,4,0,0],color:function(p){const v=t[p.dataIndex];return p.data>v*1.4?'#ef4444':p.data<v*0.7?'#22c55e':'#38bdf8'}}},{name:tn,type:'line',data:t,smooth:true,lineStyle:{color:'#f59e0b',width:2,type:'dashed'},symbol:'diamond',symbolSize:6}]
+  });
+}
+function loadCycleTable(){
+  if(!cycleData)return;
+  const tb=document.getElementById('ctb');tb.innerHTML='';
+  cycleData.forEach((p,i)=>{
+    const l=p.simulated_ltr,d=l-p.target_ltr;
+    const r=document.createElement('tr');
+    r.innerHTML='<td><strong>Y'+p.year+'</strong></td><td>'+p.phase_en+'</td><td style="font-weight:600;color:'+(l>p.target_ltr*1.2?'var(--r)':l<p.target_ltr*0.8?'var(--g)':'var(--a)')+'">'+(l*100).toFixed(2)+'%</td><td>'+(p.target_ltr*100).toFixed(2)+'%</td><td style="color:'+(d>0?'var(--r)':'var(--g)')+'">'+(d>0?'+':'')+(d*100).toFixed(2)+'%</td>';
+    tb.appendChild(r);
+  });
+}
+
+// ====== Cycle Year ======
+async function loadCyclePhases(){
+  try{
+    const r=await fetch('/macro-cycle');
+    if(!r.ok)return;
+    cyclePhases=await r.json();
+    const sel=document.getElementById('year-select');sel.innerHTML='';
+    cyclePhases.phases.forEach(p=>{
+      const o=document.createElement('option');
+      o.value=p.year;
+      o.textContent=LN==='zh'?'Y'+p.year+': '+p.phase_cn:'Y'+p.year+': '+p.phase_en;
+      sel.appendChild(o);
+    });
+    runYear();
+  }catch(e){}
+}
+function runYear(){
+  if(!cyclePhases)return;
+  const y=parseInt(document.getElementById('year-select').value);
+  const p=cyclePhases.phases.find(x=>x.year===y);
+  if(!p)return;
+  document.getElementById('py').textContent='Y'+p.year;
+  document.getElementById('pne').textContent=p.phase_en;
+  document.getElementById('pnc').textContent=p.phase_cn;
+  const hp=p.house_price_change>=0?'+':'';
+  document.getElementById('pg').innerHTML=p.gdp_growth.toFixed(1)+'<span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:1px">%</span>';
+  document.getElementById('pu').innerHTML=p.unemployment.toFixed(1)+'<span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:1px">%</span>';
+  document.getElementById('ph').innerHTML=hp+p.house_price_change.toFixed(1)+'<span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:1px">%</span>';
+  document.getElementById('phase-display').style.display='block';
+  // Run simulation for this year
+  const g=document.getElementById('gdp'),u=document.getElementById('unemp'),h=document.getElementById('hpc');
+  g.value=p.gdp_growth;u.value=p.unemployment;h.value=p.house_price_change;
+  u();r();
+}
+
+// ====== Init ======
+document.addEventListener('DOMContentLoaded',()=>{
+  const t=getPreferredTheme();
+  setTheme(t);
+  applyLang();
+  u();r();
+  setTimeout(loadGDP,500);
+  document.getElementById('gchart').onclick=loadGDP;
+  loadCyclePhases();
+});
+</script>
+</body>
+</html>
