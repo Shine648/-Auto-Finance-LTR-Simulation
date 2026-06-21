@@ -5,72 +5,65 @@ color 0B
 
 echo ============================================================
 echo    Cloudflare Tunnel Launcher
-echo    Start tunnel to expose localhost:8000 to the internet
+echo    Expose localhost:8000 to the internet
 echo ============================================================
 echo.
 
-:: Check if backend is running
-echo Checking if backend is running on port 8000...
+:: Check if backend is running on port 8000
+echo [1/2] Checking backend...
 curl -s http://127.0.0.1:8000/health >nul 2>&1
 if errorlevel 1 (
-    echo ⚠ Backend not running! Start it first with:
-    echo   start_local.bat
-    echo.
-    echo Or start both together with:
-    echo   start_public.bat
-    echo.
-    set /p "choice=Start backend now? (Y/n): "
-    if /i "!choice!" NEQ "n" (
-        echo Starting FastAPI backend...
-        start "FastAPI Backend" /min cmd /c "uvicorn main:app --host 127.0.0.1 --port 8000"
-        echo Waiting for backend...
-        :wait_server
-        timeout /t 2 /nobreak >nul
-        curl -s http://127.0.0.1:8000/health >nul 2>&1
-        if errorlevel 1 goto wait_server
-        echo ✅ Backend is running!
-    ) else (
-        echo Please start the backend first, then run this script again.
-        pause
-        exit /b 1
-    )
+    echo [..] Backend not running. Starting FastAPI...
+    start "FastAPI Backend" /min cmd /c "uvicorn main:app --host 127.0.0.1 --port 8000"
+    echo [..] Waiting for backend...
+    :wait_server
+    timeout /t 2 /nobreak >nul
+    curl -s http://127.0.0.1:8000/health >nul 2>&1
+    if errorlevel 1 goto wait_server
 )
+echo [OK] Backend is running on http://127.0.0.1:8000
+echo.
+
+echo [2/2] Starting Cloudflare Tunnel...
+echo.
 
 :: Find cloudflared
-set CLOUDFLARED=cloudflared
-where cloudflared >nul 2>&1
-if errorlevel 1 (
-    if exist "%USERPROFILE%\.cloudflared\cloudflared.exe" (
-        set "CLOUDFLARED=%USERPROFILE%\.cloudflared\cloudflared.exe"
-    ) else if exist "C:\Program Files\cloudflared\cloudflared.exe" (
-        set "CLOUDFLARED=C:\Program Files\cloudflared\cloudflared.exe"
-    ) else if exist "cloudflared.exe" (
-        set "CLOUDFLARED=cloudflared.exe"
-    ) else (
-        echo ⚠ cloudflared not found!
-        echo.
-        echo Download cloudflared.exe from:
-        echo https://github.com/cloudflare/cloudflared/releases/latest
-        echo.
-        echo Place it in this directory or add to PATH.
-        echo.
-        pause
-        exit /b 1
-    )
+set CLOUDFLARED=
+if exist "%~dp0cloudflared.exe" set "CLOUDFLARED=%~dp0cloudflared.exe"
+if not defined CLOUDFLARED if exist "%~dp0..\cloudflared.exe" set "CLOUDFLARED=%~dp0..\cloudflared.exe"
+if not defined CLOUDFLARED where cloudflared >nul 2>&1 && set "CLOUDFLARED=cloudflared"
+if not defined CLOUDFLARED if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python311\Scripts\cloudflared.exe" set "CLOUDFLARED=%USERPROFILE%\AppData\Local\Programs\Python\Python311\Scripts\cloudflared.exe"
+if not defined CLOUDFLARED if exist "%USERPROFILE%\.cloudflared\cloudflared.exe" set "CLOUDFLARED=%USERPROFILE%\.cloudflared\cloudflared.exe"
+if not defined CLOUDFLARED if exist "C:\Program Files\cloudflared\cloudflared.exe" set "CLOUDFLARED=C:\Program Files\cloudflared\cloudflared.exe"
+
+if not defined CLOUDFLARED (
+    echo [WARN] cloudflared not found!
+    echo.
+    echo Expected locations:
+    echo   - %~dp0cloudflared.exe
+    echo   - %~dp0..\cloudflared.exe
+    echo   - PATH environment
+    echo   - %%USERPROFILE%%\.cloudflared\
+    echo.
+    echo Download: https://github.com/cloudflare/cloudflared/releases/latest
+    echo.
+    echo Backend is running at http://127.0.0.1:8000
+    echo.
+    pause
+    exit /b 1
 )
 
+echo Found cloudflared at: %CLOUDFLARED%
 echo.
-echo ╔══════════════════════════════════════════════════════════╗
-echo ║                                                        ║
-echo ║  Tunnel starting...                                    ║
-echo ║                                                        ║
-echo ║  Your tunnel URL will appear above.                    ║
-echo ║  Copy the "https://xxx.trycloudflare.com" URL!         ║
-echo ║                                                        ║
-echo ║  Then paste it into the Tunnel Config UI:              ║
-echo ║  http://localhost:8000/tunnel-config                    ║
-echo ║                                                        ║
-echo ╚══════════════════════════════════════════════════════════╝
+echo -----------------------------------------------------------
+echo   Tunnel URL will appear above after a few seconds.
+echo   Copy the https://xxx.trycloudflare.com URL.
+echo.
+echo   Then open http://127.0.0.1:8000/tunnel-config
+echo   to generate your _redirects config.
+echo -----------------------------------------------------------
+echo.
+echo Press Ctrl+C to stop tunnel.
 echo.
 
 "%CLOUDFLARED%" tunnel --url http://127.0.0.1:8000
