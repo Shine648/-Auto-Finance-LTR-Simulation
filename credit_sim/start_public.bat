@@ -9,7 +9,7 @@ echo    Cloudflare Tunnel + Static/Dynamic Dual Routing
 echo ============================================================
 echo.
 echo [1/5] Installing dependencies...
-pip install fastapi uvicorn numpy pandas scipy joblib cloudflared -q
+pip install fastapi uvicorn numpy pandas scipy joblib -q
 
 echo.
 echo [2/5] Checking portfolio data...
