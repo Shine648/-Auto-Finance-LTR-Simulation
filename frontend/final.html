@@ -79,6 +79,16 @@ tr:hover td{background:var(--bg2)}tr.hl td{background:var(--card2);border-left:3
 </div>
 </header>
 
+<!-- Tunnel URL Bar -->
+<div class="cd" style="padding:10px 16px;margin-bottom:12px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:11px;color:var(--t3);white-space:nowrap">Tunnel URL:</span>
+<input id="tunnel-url" class="inp" type="url" placeholder="https://xxx.trycloudflare.com" spellcheck="false" style="flex:1;min-width:200px;padding:6px 10px;font-size:12px;background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r8);color:var(--t);outline:none">
+<button class="btn btn-s" onclick="saveTunnelUrl()" style="padding:5px 10px;font-size:11px">Save</button>
+<span id="tunnel-status" style="font-size:11px;color:var(--t3)"></span>
+</div>
+</div>
+
 <div class="g2">
 <div class="cd">
 <div class="cd-t"><span id="t-scenario">SCENARIO CONTROLS</span></div>
@@ -183,6 +193,37 @@ const i18n={
 
 let LN='en',myChart=null,gChart=null,cChart=null,cycleData=null,cyclePhases=null;
 
+// ====== Tunnel URL ======
+function getBaseUrl() {
+  const stored = localStorage.getItem('tunnel_url');
+  const input = document.getElementById('tunnel-url');
+  if (input && input.value) return input.value.replace(/\/+$/, '');
+  if (stored) {
+    if (input) input.value = stored;
+    return stored.replace(/\/+$/, '');
+  }
+  return ''; // empty = use same origin (local mode)
+}
+function saveTunnelUrl() {
+  const url = document.getElementById('tunnel-url').value.trim();
+  if (!url) {
+    localStorage.removeItem('tunnel_url');
+    document.getElementById('tunnel-status').textContent = 'Local mode';
+    return;
+  }
+  if (!url.startsWith('https://')) {
+    document.getElementById('tunnel-status').textContent = 'Must start with https://';
+    return;
+  }
+  localStorage.setItem('tunnel_url', url);
+  document.getElementById('tunnel-status').textContent = 'Saved! (' + url.replace(/https:\/\//,'').substring(0,30) + '...)';
+  document.getElementById('tunnel-status').style.color = 'var(--g)';
+}
+function apiUrl(path) {
+  const base = getBaseUrl();
+  return base ? base + path : path;
+}
+
 function applyLang(){
   for(const[id,pair]of Object.entries(i18n)){
     const el=document.getElementById(id);
@@ -239,7 +280,7 @@ async function r(){
   const g=parseFloat(document.getElementById('gdp').value),u=parseFloat(document.getElementById('unemp').value),h=parseFloat(document.getElementById('hpc').value),n=parseInt(document.getElementById('nsim').value);
   document.getElementById('decomp').textContent='⏳ '+i18n['t-loading'][LN];
   try{
-    const resp=await fetch('/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gdp_growth:g,unemployment:u,house_price_change:h,n_simulations:n,method:'monte_carlo'})});
+    const resp=await fetch(apiUrl('/simulate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gdp_growth:g,unemployment:u,house_price_change:h,n_simulations:n,method:'monte_carlo'})});
     const d=await resp.json();
     const fp=v=>v!=null?(v*100).toFixed(3)+'%':'—';
     const fv=v=>{if(v==null||isNaN(v))return'—';if(v>=1e9)return(v/1e9).toFixed(2)+'B';if(v>=1e6)return(v/1e6).toFixed(2)+'M';return v.toFixed(2)};
@@ -289,7 +330,7 @@ async function loadGDP(){
   const n=parseInt(document.getElementById('nsim').value)||2000;
   document.getElementById('gsp').innerHTML='⏳ '+i18n['t-loading'][LN];
   try{
-    const r=await fetch('/sensitivity/gdp?gdp_min=-4&gdp_max=6&gdp_steps=11&unemployment=4.5&house_price_change=0&n_simulations='+n+'&method=monte_carlo');
+    const r=await fetch(apiUrl('/sensitivity/gdp?gdp_min=-4&gdp_max=6&gdp_steps=11&unemployment=4.5&house_price_change=0&n_simulations='+n+'&method=monte_carlo'));
     const data=await r.json();
     if(!gChart)gChart=echarts.init(document.getElementById('gchart'),getEffectiveTheme()==='dark'?'dark':undefined);
     const pts=data.points,gdp=pts.map(p=>p.gdp_growth.toFixed(1)),el=pts.map(p=>+(p.mean_loss/1e6).toFixed(2)),lr=pts.map(p=>+(p.loss_rate*100).toFixed(2));
@@ -309,7 +350,7 @@ async function loadCycle(){
   const n=parseInt(document.getElementById('nsim').value)||2000;
   document.getElementById('lod').classList.remove('h');
   try{
-    const r=await fetch('/simulate/cycle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n_simulations:n,method:'monte_carlo'})});
+    const r=await fetch(apiUrl('/simulate/cycle'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n_simulations:n,method:'monte_carlo'})});
     cycleData=await r.json();
     document.getElementById('cycle-box').classList.remove('h');
     loadCycleChart();loadCycleTable();
@@ -344,7 +385,7 @@ function loadCycleTable(){
 // ====== Cycle Year ======
 async function loadCyclePhases(){
   try{
-    const r=await fetch('/macro-cycle');
+    const r=await fetch(apiUrl('/macro-cycle'));
     if(!r.ok)return;
     cyclePhases=await r.json();
     const sel=document.getElementById('year-select');sel.innerHTML='';
