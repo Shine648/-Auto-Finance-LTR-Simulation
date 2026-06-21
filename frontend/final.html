@@ -193,6 +193,20 @@ const i18n={
 
 let LN='en',myChart=null,gChart=null,cChart=null,cycleData=null,cyclePhases=null;
 
+// ====== Static 8-Year Macro Cycle Data ======
+const CYCLE_PHASES_DATA = {
+  phases: [
+    {year:1, phase_en:"Expansion",        phase_cn:"稳步扩张期",  gdp_growth:6.0, unemployment:4.2, house_price_change:2.0,  target_ltr:0.0080, factor_means:[0.6, 0.2, 0.3]},
+    {year:2, phase_en:"Peak",             phase_cn:"繁荣见顶期",  gdp_growth:6.5, unemployment:3.5, house_price_change:3.5,  target_ltr:0.0050, factor_means:[0.8, 0.5, 0.4]},
+    {year:3, phase_en:"Slowing",          phase_cn:"增速放缓期",  gdp_growth:5.0, unemployment:4.5, house_price_change:0.5,  target_ltr:0.0095, factor_means:[0.2, 0.1, 0.0]},
+    {year:4, phase_en:"Recession",        phase_cn:"经济衰退期",  gdp_growth:3.0, unemployment:6.0, house_price_change:-3.0, target_ltr:0.0210, factor_means:[-0.8, 0.3, -0.5]},
+    {year:5, phase_en:"Trough",           phase_cn:"深度谷底期",  gdp_growth:1.5, unemployment:7.5, house_price_change:-7.0, target_ltr:0.0350, factor_means:[-1.5, 0.0, -1.2]},
+    {year:6, phase_en:"Early Recovery",   phase_cn:"复苏初期",    gdp_growth:4.0, unemployment:5.5, house_price_change:-1.0, target_ltr:0.0180, factor_means:[-0.2, -0.2, -0.2]},
+    {year:7, phase_en:"Recovery",         phase_cn:"稳步复苏期",  gdp_growth:5.2, unemployment:4.8, house_price_change:1.5,  target_ltr:0.0110, factor_means:[0.3, -0.1, 0.1]},
+    {year:8, phase_en:"Normal",           phase_cn:"回归常态期",  gdp_growth:5.8, unemployment:4.3, house_price_change:2.5,  target_ltr:0.0075, factor_means:[0.5, 0.0, 0.3]},
+  ]
+};
+
 // ====== Tunnel URL ======
 function getBaseUrl() {
   const stored = localStorage.getItem('tunnel_url');
@@ -382,21 +396,17 @@ function loadCycleTable(){
   });
 }
 
-// ====== Cycle Year ======
-async function loadCyclePhases(){
-  try{
-    const r=await fetch(apiUrl('/macro-cycle'));
-    if(!r.ok)return;
-    cyclePhases=await r.json();
-    const sel=document.getElementById('year-select');sel.innerHTML='';
-    cyclePhases.phases.forEach(p=>{
-      const o=document.createElement('option');
-      o.value=p.year;
-      o.textContent=LN==='zh'?'Y'+p.year+': '+p.phase_cn:'Y'+p.year+': '+p.phase_en;
-      sel.appendChild(o);
-    });
-    runYear();
-  }catch(e){}
+// ====== Cycle Year (Static) ======
+function populateYearSelect(){
+  cyclePhases=CYCLE_PHASES_DATA;
+  const sel=document.getElementById('year-select');sel.innerHTML='';
+  cyclePhases.phases.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p.year;
+    o.textContent=LN==='zh'?'Y'+p.year+': '+p.phase_cn:'Y'+p.year+': '+p.phase_en;
+    sel.appendChild(o);
+  });
+  runYear();
 }
 function runYear(){
   if(!cyclePhases)return;
@@ -425,7 +435,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   u();r();
   setTimeout(loadGDP,500);
   document.getElementById('gchart').onclick=loadGDP;
-  loadCyclePhases();
+  populateYearSelect();
 });
 </script>
 </body>
