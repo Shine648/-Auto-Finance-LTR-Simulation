@@ -69,6 +69,9 @@ echo.
 set CLOUDFLARED=
 if exist "%~dp0cloudflared.exe" set "CLOUDFLARED=%~dp0cloudflared.exe"
 if not defined CLOUDFLARED (
+    if exist "%~dp0..\cloudflared.exe" set "CLOUDFLARED=%~dp0..\cloudflared.exe"
+)
+if not defined CLOUDFLARED (
     where cloudflared >nul 2>&1
     if not errorlevel 1 set "CLOUDFLARED=cloudflared"
 )
