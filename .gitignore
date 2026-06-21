@@ -28,3 +28,6 @@ build/
 
 # === .project directory (ignore all) ===
 .project/
+
+# === Cloudflare binary (large file, download separately) ===
+cloudflared.exe
