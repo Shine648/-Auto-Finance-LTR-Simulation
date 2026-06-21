@@ -8,30 +8,49 @@ echo    Auto Finance LTR - Public Mode
 echo    Cloudflare Tunnel + Static/Dynamic Dual Routing
 echo ============================================================
 echo.
+
 echo [1/5] Installing dependencies...
-pip install fastapi uvicorn numpy pandas scipy joblib -q
-
-echo.
-echo [2/5] Checking portfolio data...
-if not exist data\portfolio.json (
-    echo Generating sample portfolio (40,000 loans)...
-    python generate_portfolio.py
+call pip install fastapi uvicorn numpy pandas scipy joblib
+if errorlevel 1 (
+    echo.
+    echo ⚠ pip install failed. Check your Python/pip installation.
+    echo   Try running: pip install fastapi uvicorn numpy pandas scipy joblib
+    pause
+    exit /b 1
 )
-
+echo ✅ Dependencies installed.
 echo.
+
+echo [2/5] Checking portfolio data...
+cd /d "%~dp0"
+if not exist "%~dp0data\portfolio.json" (
+    echo Generating sample portfolio (40,000 loans)...
+    cd /d "%~dp0"
+    python generate_portfolio.py
+    if errorlevel 1 (
+        echo ⚠ Failed to generate portfolio.
+        pause
+        exit /b 1
+    )
+)
+echo ✅ Portfolio data ready.
+echo.
+
 echo [3/5] Starting FastAPI backend on http://127.0.0.1:8000
 echo.
+cd /d "%~dp0"
 start "FastAPI Backend" /min cmd /c "uvicorn main:app --host 127.0.0.1 --port 8000"
 
 :: Wait for server to start
 echo Waiting for server to initialize...
 :wait_server
 timeout /t 2 /nobreak >nul
+cd /d "%~dp0"
 curl -s http://127.0.0.1:8000/health >nul 2>&1
 if errorlevel 1 goto wait_server
-echo FastAPI backend is running!
-
+echo ✅ FastAPI backend is running!
 echo.
+
 echo [4/5] Starting Cloudflare Tunnel...
 echo.
 echo ╔═══════════════════════════════════════════════════════════╗
@@ -46,42 +65,63 @@ echo ║                                                          ║
 echo ╚═══════════════════════════════════════════════════════════╝
 echo.
 
-:: Try to find cloudflared
-set CLOUDFLARED=cloudflared
-where cloudflared >nul 2>&1
-if errorlevel 1 (
-    :: Check common install locations
+:: Find cloudflared - check multiple locations
+set CLOUDFLARED=
+if exist "%~dp0cloudflared.exe" set "CLOUDFLARED=%~dp0cloudflared.exe"
+if not defined CLOUDFLARED (
+    where cloudflared >nul 2>&1
+    if not errorlevel 1 set "CLOUDFLARED=cloudflared"
+)
+if not defined CLOUDFLARED (
     if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python311\Scripts\cloudflared.exe" (
         set "CLOUDFLARED=%USERPROFILE%\AppData\Local\Programs\Python\Python311\Scripts\cloudflared.exe"
-    ) else if exist "%USERPROFILE%\.cloudflared\cloudflared.exe" (
+    )
+)
+if not defined CLOUDFLARED (
+    if exist "%USERPROFILE%\.cloudflared\cloudflared.exe" (
         set "CLOUDFLARED=%USERPROFILE%\.cloudflared\cloudflared.exe"
-    ) else if exist "C:\Program Files\cloudflared\cloudflared.exe" (
+    )
+)
+if not defined CLOUDFLARED (
+    if exist "C:\Program Files\cloudflared\cloudflared.exe" (
         set "CLOUDFLARED=C:\Program Files\cloudflared\cloudflared.exe"
-    ) else (
-        echo.
-        echo ⚠ cloudflared not found!
-        echo.
-        echo Please install from: https://developers.cloudflare.com/cloudflare-one/
-        echo connections/connect-networks/downloads/
-        echo.
-        echo Or download cloudflared.exe and place it in this directory:
-        echo https://github.com/cloudflare/cloudflared/releases/latest
-        echo.
-        echo After installing, manually run:
-        echo   cloudflared tunnel --url http://localhost:8000
-        echo.
-        echo The backend is already running at http://localhost:8000
-        echo.
-        pause
-        exit /b 1
     )
 )
 
-:: Start tunnel and capture URL
+if not defined CLOUDFLARED (
+    echo.
+    echo ⚠ cloudflared not found!
+    echo.
+    echo Expected locations checked:
+    echo   - %~dp0cloudflared.exe
+    echo   - PATH environment
+    echo   - Python311 Scripts folder
+    echo   - %%USERPROFILE%%\.cloudflared\
+    echo   - C:\Program Files\cloudflared\
+    echo.
+    echo Please download cloudflared.exe from:
+    echo https://github.com/cloudflare/cloudflared/releases/latest
+    echo.
+    echo Place it in the current directory: %~dp0
+    echo.
+    echo After installing, manually run:
+    echo   cloudflared tunnel --url http://localhost:8000
+    echo.
+    echo The backend is already running at http://localhost:8000
+    echo.
+    pause
+    exit /b 1
+)
+
+echo Found cloudflared: %CLOUDFLARED%
+echo.
+
+:: Start tunnel
 echo Starting tunnel (Ctrl+C to stop tunnel only)...
 echo.
 echo Press any key to stop all services...
 echo.
+cd /d "%~dp0"
 start "Cloudflare Tunnel" /min cmd /c "title Cloudflare Tunnel && "%CLOUDFLARED%" tunnel --url http://localhost:8000"
 
 echo.
@@ -108,7 +148,7 @@ echo ║  Cloudflare Pages CDN serves:                            ║
 echo ║   ✓ /index.html (and all static assets)                  ║
 echo ║   ✓ /tunnel-config UI                                    ║
 echo ║                                                          ║
-║  Tunnel proxies to your local server:                      ║
+echo ║  Tunnel proxies to your local server:                    ║
 echo ║   ✓ /health, /simulate, /macro-cycle                     ║
 echo ║   ✓ /simulate/* (batch, cycle, presets)                  ║
 echo ║   ✓ /sensitivity/*, /cache/*                             ║
