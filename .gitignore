@@ -1,5 +1,12 @@
 # === Privacy / Sensitive Data ===
 auto_finance_credit_portfolio.csv
+dynamic_data.csv
+static_pool_data.csv
+
+# === Validation / Test files (generated locally) ===
+run_validation.py
+validate_test.py
+validation_output.txt
 credit_sim/data/portfolio.json
 credit_sim/data/cache/
 __pycache__/
