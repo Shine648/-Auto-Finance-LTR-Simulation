@@ -19,6 +19,7 @@
 # /sensitivity/* YOUR_TUNNEL_URL/sensitivity/:splat 200
 # /cache/*     YOUR_TUNNEL_URL/cache/:splat 200
 # /report/pdf  YOUR_TUNNEL_URL/report/pdf  200
+# /validate/*  YOUR_TUNNEL_URL/validate/:splat 200
 
 # If using Cloudflare Pages Functions (_middleware.js), leave all routes commented
 # and set TUNNEL_URL in Pages environment variables instead.

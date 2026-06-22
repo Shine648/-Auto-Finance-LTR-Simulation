@@ -156,6 +156,51 @@ class PDFReportRequest(BaseModel):
     include_heatmap: bool = Field(default=False, description="Include heatmap section")
 
 
+class ValidationResult(BaseModel):
+    """Validation result from real-world data comparison."""
+    scenario: Optional[str] = None
+    matching_period: Optional[str] = None
+    month_count: Optional[int] = None
+    simulated_pd: Optional[float] = None
+    simulated_pd_pct: Optional[float] = None
+    actual_delinquency_rate: Optional[float] = None
+    actual_delinquency_pct: Optional[float] = None
+    actual_30p_delinquency: Optional[float] = None
+    actual_30p_delinquency_pct: Optional[float] = None
+    actual_90p_delinquency: Optional[float] = None
+    actual_90p_delinquency_pct: Optional[float] = None
+    ratio_sim_to_actual: Optional[float] = None
+    model_accuracy: Optional[float] = None
+    target_ltr: Optional[float] = None
+    error: Optional[str] = None
+
+
+class PDCurvePoint(BaseModel):
+    """Single point on PD term structure curve."""
+    month_on_book: int
+    avg_delinquency_rate: float
+    avg_delinquency_pct: float
+    avg_default_rate_90p: float
+    avg_default_rate_90p_pct: float
+    sample_count: int
+
+
+class VintageSummary(BaseModel):
+    """Summary of a static pool vintage."""
+    vintage: str
+    month_count: int
+    max_month_on_book: int
+    final_default_rate_90p: float
+    final_default_rate_90p_pct: float
+
+
+class ValidationTimeSeries(BaseModel):
+    """Complete time series from real-world data."""
+    delinquency_rates: List[Dict]
+    pd_term_structure: List[PDCurvePoint]
+    vintage_summary: List[VintageSummary]
+
+
 class HealthResponse(BaseModel):
     """Health check response."""
     status: str

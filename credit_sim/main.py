@@ -18,6 +18,7 @@ from engine.cache import SimulationCache
 from engine.macro_cycle import MacroCycleModel, get_phase_info, get_all_phases, compute_ltr
 from engine.heatmap import HeatmapEngine
 from engine.pdf_report import generate_report
+from engine.validation import ValidationEngine
 from models import (
     ScenarioInput, ScenarioPreset, SimulationResult,
     LossHistogram, ScenarioComparison,
@@ -25,6 +26,7 @@ from models import (
     MacroSensitivityCurve, MacroSensitivityPoint,
     ScenarioPresetsResponse, HealthResponse,
     HeatmapRequest, HeatmapResponse, PDFReportRequest,
+    ValidationResult, PDCurvePoint, VintageSummary, ValidationTimeSeries,
 )
 
 app = FastAPI(title="Credit Portfolio Simulation API", version="1.2.0")
@@ -365,6 +367,76 @@ def report_pdf(req: PDFReportRequest):
         print(f"PDF generation error: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+
+# ---- Validation Endpoints (real-world data comparison) ----
+_validation_engine = None
+
+def get_validator() -> ValidationEngine:
+    global _validation_engine
+    if _validation_engine is None:
+        _validation_engine = ValidationEngine()
+        _validation_engine.load()
+    return _validation_engine
+
+
+@app.get("/validate/scenarios", response_model=List[ValidationResult])
+async def validate_all_presets(n_simulations: int = 5000):
+    """Validate all preset scenarios against real-world data."""
+    validator = get_validator()
+    if not validator.dynamic_data:
+        raise HTTPException(status_code=404, detail="dynamic_data.csv not loaded")
+
+    results = []
+    for preset in PRESETS:
+        sc = ScenarioInput(
+            gdp_growth=preset.gdp_growth, unemployment=preset.unemployment,
+            house_price_change=preset.house_price_change,
+            n_simulations=n_simulations, method='monte_carlo')
+        raw = _run_cached(sc)
+        pd_val = raw.get('pd_scenario', 0)
+        result = validator.validate_stress_scenario(pd_val, preset.label)
+        results.append(ValidationResult(**result))
+    return results
+
+
+@app.get("/validate/current", response_model=ValidationResult)
+async def validate_current(gdp_growth: float = 2.0, unemployment: float = 4.5,
+                           house_price_change: float = 0.0, n_simulations: int = 5000):
+    """Validate current simulation against real-world data."""
+    validator = get_validator()
+    if not validator.dynamic_data:
+        raise HTTPException(status_code=404, detail="dynamic_data.csv not loaded")
+
+    sc = ScenarioInput(
+        gdp_growth=gdp_growth, unemployment=unemployment,
+        house_price_change=house_price_change,
+        n_simulations=n_simulations, method='monte_carlo')
+    raw = _run_cached(sc)
+    pd_val = raw.get('pd_scenario', 0)
+
+    # Determine scenario label
+    fm = macro_to_factors(gdp_growth, unemployment, house_price_change)
+    _factor_model.set_factor_means(fm)
+    label = _factor_model.scenario_label
+
+    result = validator.validate_stress_scenario(pd_val, label)
+    return ValidationResult(**result)
+
+
+@app.get("/validate/timeseries", response_model=ValidationTimeSeries)
+async def get_validation_timeseries():
+    """Get complete real-world time series for frontend visualization."""
+    validator = get_validator()
+    if not validator.dynamic_data:
+        raise HTTPException(status_code=404, detail="dynamic_data.csv not loaded")
+
+    ts = validator.get_time_series()
+    return ValidationTimeSeries(
+        delinquency_rates=ts['delinquency_rates'],
+        pd_term_structure=[PDCurvePoint(**p) for p in ts['pd_term_structure']],
+        vintage_summary=[VintageSummary(**v) for v in ts['vintage_summary']],
+    )
 
 
 if __name__ == '__main__':
