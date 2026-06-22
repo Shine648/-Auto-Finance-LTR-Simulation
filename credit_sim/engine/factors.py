@@ -36,27 +36,30 @@ def macro_to_factors(gdp_growth: float = 0.0,
     mu_I = 0.0
     mu_R = 0.0
 
+    # == CALIBRATED FACTOR MAPPING (reduced sensitivity) ==
+    # Calibrated so Recession (GDP=-2%, Unemp=9%, HPC=-10%) produces
+    # factor means in range [-1.0, 0.5], giving PD ~2-4x base
+    
     # GDP deviation from baseline (2.0%)
-    # If GDP = 2.0, gdp_dev = 0 -> neutral
-    # If GDP = -2.0, gdp_dev = -4 -> G = -4 * 0.4 = -1.6 (recession)
-    # If GDP = 4.0, gdp_dev = +2 -> G = +2 * 0.4 = +0.8 (boom)
+    # Calibrated: old 0.4 → 0.15 (factor range: -1.2 to +0.9 → -0.45 to +0.34)
     gdp_dev = gdp_growth - 2.0
-    mu_G += gdp_dev * 0.4
+    mu_G += gdp_dev * 0.15
 
     # Unemployment deviation from baseline (4.5%)
     # Higher unemployment = negative for economy
+    # Calibrated: old 0.3 → 0.10
     unemp_dev = unemployment - 4.5
-    mu_G -= unemp_dev * 0.3  # higher unemp -> lower G
+    mu_G -= unemp_dev * 0.10  # higher unemp -> lower G
 
     # Interest rate factor
-    # Higher GDP growth -> upward pressure on rates
-    # Higher unemployment -> downward pressure on rates
-    mu_I += gdp_dev * 0.2
-    mu_I -= unemp_dev * 0.15
+    # Calibrated: old 0.2/0.15 → 0.08/0.05
+    mu_I += gdp_dev * 0.08
+    mu_I -= unemp_dev * 0.05
 
     # Real estate factor: directly from house price change
-    # house_price_change=0 -> R=0, -10% -> R=-1.5, +10% -> R=+1.5
-    mu_R += house_price_change * 0.15
+    # Calibrated: old 0.15 → 0.06
+    # house_price_change=0 -> R=0, -10% -> R=-0.6, +10% -> R=+0.6
+    mu_R += house_price_change * 0.06
 
     return np.array([mu_G, mu_I, mu_R])
 
@@ -101,11 +104,11 @@ class FactorModel:
             return "Mild Stress"
 
     def get_presets(self) -> Dict[str, np.ndarray]:
-        """Get preset scenario factor means."""
+        """Get preset scenario factor means (calibrated)."""
         return {
             'Baseline': np.array([0.0, 0.0, 0.0]),
-            'Mild Recession': np.array([-0.5, 0.2, -0.5]),
-            'Severe Recession': np.array([-2.0, 0.5, -2.0]),
-            'Boom': np.array([1.5, 0.8, 1.5]),
-            'Housing Crisis': np.array([-0.3, -0.5, -2.5]),
+            'Mild Recession': np.array([-0.2, 0.1, -0.2]),
+            'Severe Recession': np.array([-0.6, 0.2, -0.6]),
+            'Boom': np.array([0.5, 0.3, 0.5]),
+            'Housing Crisis': np.array([-0.1, -0.2, -0.9]),
         }

@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from typing import List
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from engine.portfolio import load_portfolio, generate_portfolio
+from engine.portfolio import load_portfolio, generate_portfolio, load_csv_portfolio
 from engine.factors import macro_to_factors, FactorModel
 from engine.simulation import MonteCarloSimulator, VasicekSimulator
 from engine.metrics import compute_loss_distribution
@@ -33,16 +33,18 @@ app = FastAPI(title="Credit Portfolio Simulation API", version="1.2.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
                    allow_methods=["*"], allow_headers=["*"])
 
-# Load portfolio
-PORTFOLIO_PATH = 'data/portfolio.json'
-if os.path.exists(PORTFOLIO_PATH):
-    portfolio_data = load_portfolio(PORTFOLIO_PATH)
-    print(f"Loaded {len(portfolio_data)} loans")
-else:
-    print(f"Generating portfolio...")
-    portfolio_data = generate_portfolio(40000)
-    from engine.portfolio import save_portfolio
-    save_portfolio(portfolio_data, PORTFOLIO_PATH)
+# Load portfolio - try CSV first (calibrated auto finance data), fallback to JSON
+portfolio_data = load_csv_portfolio()
+if portfolio_data is None:
+    PORTFOLIO_PATH = 'data/portfolio.json'
+    if os.path.exists(PORTFOLIO_PATH):
+        portfolio_data = load_portfolio(PORTFOLIO_PATH)
+        print(f"Loaded {len(portfolio_data)} loans from JSON")
+    else:
+        print(f"Generating synthetic portfolio...")
+        portfolio_data = generate_portfolio(40000)
+        from engine.portfolio import save_portfolio
+        save_portfolio(portfolio_data, PORTFOLIO_PATH)
 
 _simulator_mc = None
 _simulator_vasicek = None
