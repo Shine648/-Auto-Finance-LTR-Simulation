@@ -18,7 +18,9 @@ const API_ROUTES = [
   '/health', '/macro-cycle', '/presets', '/simulate',
   // Wildcard prefix routes
   '/simulate/', '/simulate/batch', '/simulate/presets',
-  '/simulate/cycle', '/vasicek/', '/sensitivity/', '/cache/',
+  '/simulate/cycle', '/simulate/heatmap',
+  '/report/pdf',
+  '/vasicek/', '/sensitivity/', '/cache/',
 ];
 
 const STATIC_EXTENSIONS = [

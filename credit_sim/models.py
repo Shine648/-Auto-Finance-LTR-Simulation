@@ -114,6 +114,48 @@ class ScenarioPresetsResponse(BaseModel):
     presets: List[ScenarioPreset]
 
 
+class HeatmapRequest(BaseModel):
+    """Request for dual-stress sensitivity heatmap."""
+    unemp_min: float = Field(default=3.0, description="Unemployment minimum (%)")
+    unemp_max: float = Field(default=12.0, description="Unemployment maximum (%)")
+    hp_min: float = Field(default=-20.0, description="House/used car price minimum (%)")
+    hp_max: float = Field(default=10.0, description="House/used car price maximum (%)")
+    grid_size: int = Field(default=20, ge=5, le=50, description="Grid points per dimension")
+    gdp_growth: float = Field(default=2.0, description="Fixed GDP growth rate (%)")
+    n_simulations: int = Field(default=2000, ge=100, le=20000, description="Simulations per point")
+
+
+class HeatmapResponse(BaseModel):
+    """Response from grid-search heatmap."""
+    unemployment_range: List[float]
+    hp_range: List[float]
+    grid_size: int
+    X: List[List[float]]
+    Y: List[List[float]]
+    loss_matrix: List[List[float]]
+    var99_matrix: List[List[float]]
+    loss_rate_matrix: List[List[float]]
+    contours: List[Dict]
+    safe_zone: List[List[bool]]
+    capital_threshold_pct: float
+    unit: str
+    unit_bps: str
+    current_unemployment: Optional[float] = None
+    current_hp: Optional[float] = None
+    current_loss_rate: Optional[float] = None
+
+
+class PDFReportRequest(BaseModel):
+    """Request for PDF report generation."""
+    gdp_growth: float = Field(default=2.0, description="GDP growth rate in %")
+    unemployment: float = Field(default=4.5, description="Unemployment rate in %")
+    house_price_change: float = Field(default=0.0, description="House price change in %")
+    n_simulations: int = Field(default=10000, ge=100, le=100000, description="Number of simulations")
+    method: str = Field(default="monte_carlo", description="Simulation method")
+    include_cycle: bool = Field(default=True, description="Include 8-year cycle projection")
+    include_heatmap: bool = Field(default=False, description="Include heatmap section")
+
+
 class HealthResponse(BaseModel):
     """Health check response."""
     status: str

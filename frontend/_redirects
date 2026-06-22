@@ -14,9 +14,11 @@
 # /macro-cycle YOUR_TUNNEL_URL/macro-cycle 200
 # /presets     YOUR_TUNNEL_URL/presets     200
 # /simulate    YOUR_TUNNEL_URL/simulate    200
+# /simulate/*  YOUR_TUNNEL_URL/simulate/:splat 200
 # /vasicek/*   YOUR_TUNNEL_URL/vasicek/:splat 200
 # /sensitivity/* YOUR_TUNNEL_URL/sensitivity/:splat 200
 # /cache/*     YOUR_TUNNEL_URL/cache/:splat 200
+# /report/pdf  YOUR_TUNNEL_URL/report/pdf  200
 
 # If using Cloudflare Pages Functions (_middleware.js), leave all routes commented
 # and set TUNNEL_URL in Pages environment variables instead.

@@ -16,12 +16,15 @@ from engine.simulation import MonteCarloSimulator, VasicekSimulator
 from engine.metrics import compute_loss_distribution
 from engine.cache import SimulationCache
 from engine.macro_cycle import MacroCycleModel, get_phase_info, get_all_phases, compute_ltr
+from engine.heatmap import HeatmapEngine
+from engine.pdf_report import generate_report
 from models import (
     ScenarioInput, ScenarioPreset, SimulationResult,
     LossHistogram, ScenarioComparison,
     MacroCyclePhase, MacroCycleResponse, LTRProjection,
     MacroSensitivityCurve, MacroSensitivityPoint,
     ScenarioPresetsResponse, HealthResponse,
+    HeatmapRequest, HeatmapResponse, PDFReportRequest,
 )
 
 app = FastAPI(title="Credit Portfolio Simulation API", version="1.2.0")
@@ -256,6 +259,113 @@ def gdp_sensitivity(gdp_min: float = -4.0, gdp_max: float = 6.0, gdp_steps: int 
             gdp_growth=gdp, mean_loss=res['mean_loss'],
             var_99=res['var_99'], loss_rate=res['loss_rate']))
     return MacroSensitivityCurve(variable="gdp_growth", points=points)
+
+@app.post("/simulate/heatmap", response_model=HeatmapResponse)
+def simulate_heatmap(req: HeatmapRequest):
+    """Run grid-search heatmap for dual-stress sensitivity (Unemployment × Asset Price)."""
+    engine = HeatmapEngine(portfolio_data, n_simulations=req.n_simulations)
+    result = engine.grid_search(
+        unemp_min=req.unemp_min, unemp_max=req.unemp_max,
+        hp_min=req.hp_min, hp_max=req.hp_max,
+        grid_size=req.grid_size, gdp_growth=req.gdp_growth,
+        n_simulations=req.n_simulations,
+    )
+
+    # Get current scenario position from current sliders
+    # Default to baseline if not specified
+    current_unemp = (req.unemp_min + req.unemp_max) / 2
+    current_hp = (req.hp_min + req.hp_max) / 2
+    current_loss_rate = 0.0
+
+    result['current_unemployment'] = current_unemp
+    result['current_hp'] = current_hp
+    result['current_loss_rate'] = current_loss_rate
+
+    return result
+
+
+@app.post("/report/pdf")
+def report_pdf(req: PDFReportRequest):
+    """Generate professional PDF report for current scenario."""
+    from fastapi.responses import StreamingResponse
+    import io
+    import traceback
+
+    try:
+        # Run simulation for current scenario
+        scenario = ScenarioInput(
+            gdp_growth=req.gdp_growth, unemployment=req.unemployment,
+            house_price_change=req.house_price_change,
+            n_simulations=req.n_simulations, method=req.method,
+        )
+        raw_result = _run_cached(scenario)
+        print(f"PDF: Simulation done, mean_loss={raw_result['mean_loss']:.2f}")
+
+        # Get cycle projections if requested
+        cycle_data = None
+        if req.include_cycle:
+            cycle_projections = []
+            for yr in range(1, 9):
+                sc = ScenarioInput(
+                    gdp_growth=2.0, unemployment=4.5, house_price_change=0.0,
+                    n_simulations=min(req.n_simulations, 5000),
+                    method=req.method, observation_year=yr)
+                res = _run_cached(sc)
+                phase = get_phase_info(yr)
+                total_exp = res['total_exposure']
+                ltr_val = compute_ltr(res['mean_loss'], total_exp)
+                cycle_projections.append({
+                    'year': yr,
+                    'phase_en': phase['phase_en'],
+                    'phase_cn': phase['phase_cn'],
+                    'simulated_ltr': ltr_val,
+                    'target_ltr': phase['target_ltr'],
+                    'mean_loss': res['mean_loss'],
+                    'total_exposure': total_exp,
+                })
+            cycle_data = cycle_projections
+            print(f"PDF: Cycle data generated ({len(cycle_data)} years)")
+
+        # Build histogram data for charts
+        hist = compute_loss_distribution(raw_result['losses'], n_bins=50)
+        sim_result_dict = {**raw_result, 'histogram': hist}
+
+        # Generate PDF
+        scenario_params = {
+            'gdp_growth': req.gdp_growth,
+            'unemployment': req.unemployment,
+            'house_price_change': req.house_price_change,
+            'n_simulations': req.n_simulations,
+            'method': req.method,
+        }
+
+        print("PDF: Generating report...")
+        pdf_bytes = generate_report(
+            scenario_params=scenario_params,
+            simulation_result=sim_result_dict,
+            cycle_projections=cycle_data,
+            heatmap_data=None,
+        )
+        print(f"PDF: Report generated, size={len(pdf_bytes) if pdf_bytes else 0} bytes")
+
+        if pdf_bytes is None or len(pdf_bytes) < 100:
+            raise HTTPException(status_code=500, detail="PDF generation returned empty result")
+
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="LTR_Report_{req.gdp_growth:.0f}p_{req.unemployment:.0f}u_{req.house_price_change:.0f}h.pdf"',
+                'Cache-Control': 'no-cache',
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"PDF generation error: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
 
 if __name__ == '__main__':
     import uvicorn

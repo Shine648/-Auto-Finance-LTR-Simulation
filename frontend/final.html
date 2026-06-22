@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Auto Finance LTR Simulation | 汽车金融损失率模拟</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <style>
 :root{--bg:#090d16;--bg2:#0f1724;--card:#121b2d;--card2:#1a2740;--b:#1e3456;--b2:#2a4a6a;--t:#e2e8f0;--t2:#8ba3c0;--t3:#5a7a9a;--a:#38bdf8;--a2:#0284c7;--ag:rgba(56,189,248,.12);--g:#22c55e;--o:#f59e0b;--r:#ef4444;--rg:rgba(239,68,68,.1);--gg:rgba(34,197,94,.1);--r12:12px;--r8:8px;--sh:0 4px 24px rgba(0,0,0,.4)}
 [data-theme="light"]{--bg:#f1f5f9;--bg2:#e2e8f0;--card:#ffffff;--card2:#f8fafc;--b:#cbd5e1;--b2:#94a3b8;--t:#0f172a;--t2:#475569;--t3:#64748b;--a:#0284c7;--a2:#0369a1;--ag:rgba(2,132,199,.1);--g:#16a34a;--o:#d97706;--r:#dc2626;--rg:rgba(220,38,38,.08);--gg:rgba(22,163,74,.08);--sh:0 4px 24px rgba(0,0,0,.08)}
-[data-theme="dark"]{--bg:#090d16;--bg2:#0f1724;--card:#121b2d;--card2:#1a2740;--b:#1e3456;--b2:#2a4a6a;--t:#e2e8f0;--t2:#8ba3c0;--t3:#5a7a9a;--a:#38bdf8;--a2:#0284c7;--ag:rgba(56,189,248,.12);--g:#22c55e;--o:#f59e0b;--r:#ef4444;--rg:rgba(239,68,68,.1);--gg:rgba(34,197,94,.1);--sh:0 4px 24px rgba(0,0,0,.4)}
+[data-theme="dark"]{--bg:#090d16;--bg2:#0f1724;--card:#121b2d;--card2:#1a2740;--b:#1e3456;--b2:#2a4a6a;--t:#e2e8f0;--t2:#8ba3c0;--t3:#5a7a9a;--a:#38bdf8;--a2:#0284c7;--ag:rgba(56,189,248,.12);--g:#22c55e;--o:#f59e0b;--r:#ef4444;--rg:rgba(239,68,68,.1);--gg:rgba(22,163,74,.08);--sh:0 4px 24px rgba(0,0,0,.4)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;transition:background .25s,color .25s}
 .c{max-width:1200px;margin:0 auto;padding:16px}
@@ -26,8 +27,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .cd-t{font-size:11px;font-weight:600;margin-bottom:12px;color:var(--a);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:6px}
 .cd-t::before{content:'';width:3px;height:12px;background:var(--a);border-radius:2px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-@media(max-width:900px){.g2{grid-template-columns:1fr}}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}}
 @media(max-width:600px){.g4{grid-template-columns:1fr 1fr}}
 .mc{background:var(--card2);border-radius:var(--r8);padding:10px 12px;border:1px solid var(--b)}
 .ml{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;font-weight:500}
@@ -42,10 +44,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .btn{padding:8px 14px;font-size:12px;font-weight:600;border:none;border-radius:var(--r8);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .btn-p{background:linear-gradient(135deg,var(--a2),var(--a));color:#fff;width:100%}
 .btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--ag)}
+.btn-g{background:linear-gradient(135deg,#059669,#22c55e);color:#fff;width:100%}
+.btn-g:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--gg)}
+.btn-o{background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;width:100%}
+.btn-o:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,158,11,.2)}
 .btn-s{background:var(--card2);color:var(--a);border:1px solid var(--b2);padding:5px 10px;font-size:11px}
 .btn-s:hover{background:var(--b2)}
 .ch{width:100%;height:300px;border-radius:var(--r8);overflow:hidden}
 .ch2{width:100%;height:200px;border-radius:var(--r8);overflow:hidden}
+.ch-hm{width:100%;height:460px;border-radius:var(--r8);overflow:hidden}
 .tw{overflow-x:auto;border-radius:var(--r8);border:1px solid var(--b)}
 table{width:100%;border-collapse:collapse;font-size:11px}thead{background:var(--bg2)}
 th{padding:7px 10px;text-align:left;color:var(--t2);font-weight:500;font-size:9px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--b)}
@@ -60,6 +67,9 @@ tr:hover td{background:var(--bg2)}tr.hl td{background:var(--card2);border-left:3
 .lt{font-size:12px;color:var(--t2)}
 #decomp{font-size:14px;padding:10px 14px;background:var(--bg2);border-radius:var(--r8);text-align:center;margin-top:8px;line-height:1.6;border:1px solid var(--b)}
 .decomp-v{font-size:18px;font-weight:700}
+.pb{width:100%;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;margin:6px 0}
+.pb-bar{height:100%;background:linear-gradient(90deg,var(--a2),var(--a));border-radius:3px;transition:width .3s ease;width:0%}
+.hm-hint{font-size:9px;color:var(--t3);padding:4px 0;text-align:center}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .cd,.mc{animation:fade .35s ease-out}
@@ -103,7 +113,9 @@ tr:hover td{background:var(--bg2)}tr.hl td{background:var(--card2);border-left:3
 <div class="sl-row"><span class="sl-label" id="l-unemp">Unemployment</span><input type="range" id="unemp" min="2" max="15" step="0.1" value="4.5" oninput="u();r()"><span class="sl-val" id="unemp-v">4.5</span><span class="sl-unit">%</span></div>
 <div class="sl-row"><span class="sl-label" id="l-housing">Housing Price</span><input type="range" id="hpc" min="-20" max="15" step="0.5" value="0" oninput="u();r()"><span class="sl-val" id="hpc-v">0.0</span><span class="sl-unit">%</span></div>
 <div class="sl-row"><span class="sl-label" id="l-sims">Simulations</span><select id="nsim" style="flex:1;padding:6px;font-size:12px;background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r8);color:var(--t);outline:none"><option value="500">500</option><option value="2000" selected>2,000</option><option value="5000">5,000</option><option value="10000">10,000</option></select></div>
-<button class="btn btn-p" onclick="r()" style="margin-top:4px">▶ <span id="btn-run">Run Simulation</span></button>
+<div style="display:flex;gap:6px;margin-top:4px">
+<button class="btn btn-p" onclick="r()" style="flex:1">▶ <span id="btn-run">Run Simulation</span></button>
+</div>
 <hr style="margin:12px 0;border:none;border-top:1px solid var(--b)">
 <div class="sl-row"><span class="sl-label" id="l-year">Cycle Year</span><select id="year-select" style="flex:1;padding:6px;font-size:12px;background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r8);color:var(--t);outline:none" onchange="runYear()"></select></div>
 <div style="display:flex;gap:6px;margin-top:6px">
@@ -140,6 +152,9 @@ tr:hover td{background:var(--bg2)}tr.hl td{background:var(--card2);border-left:3
 <div class="mc"><div class="ml" id="ml-eck">EL = PD×LGD×EAD</div><div class="mv" id="eck">—</div></div>
 </div>
 <div id="decomp" style="font-size:15px;padding:12px 14px;background:var(--bg2);border-radius:var(--r8);text-align:center;margin-top:8px;line-height:1.6;border:1px solid var(--b)">⏳ <span id="t-loading">Loading...</span></div>
+<div style="display:flex;gap:6px;margin-top:8px">
+<button class="btn btn-g" onclick="exportPDF()" style="flex:1">📄 <span id="btn-pdf">Export PDF Report</span></button>
+</div>
 </div>
 
 <div class="g2">
@@ -153,6 +168,18 @@ tr:hover td{background:var(--bg2)}tr.hl td{background:var(--card2);border-left:3
 <div class="tw" style="margin-top:8px"><table><thead><tr>
 <th id="th-year">Year</th><th id="th-phase">Phase</th><th id="th-sim">Sim LTR</th><th id="th-tgt">Target</th><th id="th-dev">Dev</th>
 </tr></thead><tbody id="ctb"></tbody></table></div>
+</div>
+
+<!-- HEATMAP CARD -->
+<div class="cd" id="heatmap-box">
+<div class="cd-t"><span id="t-heatmap">DUAL-STRESS HEATMAP</span></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+<button class="btn btn-s" onclick="loadHeatmap()" id="btn-heatmap-run">🔥 <span id="btn-hm-run">Run Heatmap</span></button>
+<span style="font-size:10px;color:var(--t3);padding:4px 0">Unemp 3-12% × Used Car -20% ~ +10%</span>
+</div>
+<div class="pb" id="hm-progress" style="display:none"><div class="pb-bar" id="hm-pbar"></div></div>
+<div id="hm-hint" class="hm-hint" style="display:none"></div>
+<div id="heatmap-chart" class="ch-hm"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--t3);font-size:12px">🔥 <span id="t-click-hm">Click "Run Heatmap" to generate dual-stress sensitivity matrix</span></div></div>
 </div>
 
 <div class="ov h" id="lod"><div class="ob"><div class="sp"></div><div class="lt" id="loading-text">Running simulation...</div></div></div>
@@ -169,10 +196,12 @@ const i18n={
   't-dist':{en:'LOSS DISTRIBUTION',zh:'损失分布'},
   't-sensi':{en:'GDP SENSITIVITY',zh:'GDP敏感度'},
   't-cycle':{en:'LTR CYCLE',zh:'损失率周期'},
+  't-heatmap':{en:'DUAL-STRESS HEATMAP',zh:'双重压力热力图'},
   'l-unemp':{en:'Unemployment',zh:'失业率'},
   'l-housing':{en:'Housing Price',zh:'房价'},
   'l-sims':{en:'Simulations',zh:'模拟次数'},
   'btn-run':{en:'Run Simulation',zh:'运行模拟'},
+  'btn-cycle':{en:'Full 8-Year Cycle',zh:'完整八年周期'},
   'ml-el':{en:'Expected Loss',zh:'预期损失'},
   'ml-var99':{en:'VaR 99%',zh:'VaR 99%'},
   'ml-lr':{en:'Loss Rate',zh:'损失率'},
@@ -183,15 +212,18 @@ const i18n={
   'ml-eck':{en:'EL = PD×LGD×EAD',zh:'EL = PD×LGD×EAD'},
   't-loading':{en:'Loading...',zh:'加载中...'},
   't-click-gdp':{en:'Click to load',zh:'点击加载'},
+  't-click-hm':{en:'Click "Run Heatmap" to generate dual-stress sensitivity matrix',zh:'点击"运行热力图"生成双重压力敏感度矩阵'},
+  'btn-hm-run':{en:'Run Heatmap',zh:'运行热力图'},
+  'btn-pdf':{en:'Export PDF Report',zh:'导出PDF报告'},
   'th-year':{en:'Year',zh:'年份'},'th-phase':{en:'Phase',zh:'阶段'},
   'th-sim':{en:'Sim LTR',zh:'模拟LTR'},'th-tgt':{en:'Target',zh:'目标'},
   'th-dev':{en:'Dev',zh:'偏差'},
   'loading-text':{en:'Running simulation...',zh:'运行模拟中...'},
   'l-year':{en:'Cycle Year',zh:'周期年份'},
-  'btn-cycle':{en:'Full 8-Year Cycle',zh:'完整八年周期'},
 };
 
 let LN='en',myChart=null,gChart=null,cChart=null,cycleData=null,cyclePhases=null;
+let heatmapData=null,hmChart=null,lastResult=null;
 
 // ====== Static 8-Year Macro Cycle Data ======
 const CYCLE_PHASES_DATA = {
@@ -216,7 +248,7 @@ function getBaseUrl() {
     if (input) input.value = stored;
     return stored.replace(/\/+$/, '');
   }
-  return ''; // empty = use same origin (local mode)
+  return '';
 }
 function saveTunnelUrl() {
   const url = document.getElementById('tunnel-url').value.trim();
@@ -296,6 +328,7 @@ async function r(){
   try{
     const resp=await fetch(apiUrl('/simulate'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gdp_growth:g,unemployment:u,house_price_change:h,n_simulations:n,method:'monte_carlo'})});
     const d=await resp.json();
+    lastResult=d;
     const fp=v=>v!=null?(v*100).toFixed(3)+'%':'—';
     const fv=v=>{if(v==null||isNaN(v))return'—';if(v>=1e9)return(v/1e9).toFixed(2)+'B';if(v>=1e6)return(v/1e6).toFixed(2)+'M';return v.toFixed(2)};
     document.getElementById('el').textContent=fv(d.mean_loss);
@@ -320,12 +353,12 @@ async function r(){
         formatter:function(p){
           const idx=p[0].dataIndex;
           const s=d.histogram.bins[idx],e=d.histogram.bins[idx+1];
-          return'<strong>'+LN==='zh'?'损失范围':'Loss Range'+'</strong><br/>$'+fv(s)+' — $'+fv(e)+'<br/>'+'Frequency: <strong>'+p[0].value+'</strong>'
+          return'<strong>'+(LN==='zh'?'损失范围':'Loss Range')+'</strong><br/>$'+fv(s)+' — $'+fv(e)+'<br/>'+(LN==='zh'?'频次':'Frequency')+': <strong>'+p[0].value+'</strong>'
         }
       },
       grid:{left:70,right:25,top:20,bottom:35},
-      xAxis:{type:'value',name:'Loss ($)',axisLabel:{formatter:v=>fv(v),color:'var(--t2)',fontSize:10},splitLine:{lineStyle:{color:'var(--b)',type:'dashed'}}},
-      yAxis:{type:'value',name:'Frequency',axisLabel:{color:'var(--t2)',fontSize:10},splitLine:{lineStyle:{color:'var(--b)',type:'dashed'}}},
+      xAxis:{type:'value',name:LN==='zh'?'损失 ($)':'Loss ($)',axisLabel:{formatter:v=>fv(v),color:'var(--t2)',fontSize:10},splitLine:{lineStyle:{color:'var(--b)',type:'dashed'}}},
+      yAxis:{type:'value',name:LN==='zh'?'频次':'Frequency',axisLabel:{color:'var(--t2)',fontSize:10},splitLine:{lineStyle:{color:'var(--b)',type:'dashed'}}},
       series:[{type:'bar',data:d.histogram.counts.map((v,i)=>({
         value:v,itemStyle:{color:v>maxCount*0.8?'#ef4444':v>maxCount*0.5?'#f59e0b':'#38bdf8',borderRadius:[3,3,0,0]}
       })),barWidth:'98%',
@@ -339,6 +372,27 @@ async function r(){
   }catch(e){document.getElementById('decomp').textContent='Error: '+e.message}
 }
 
+// ====== PDF Export ======
+async function exportPDF(){
+  const g=parseFloat(document.getElementById('gdp').value),u=parseFloat(document.getElementById('unemp').value),h=parseFloat(document.getElementById('hpc').value),n=parseInt(document.getElementById('nsim').value);
+  document.getElementById('lod').classList.remove('h');
+  document.getElementById('loading-text').textContent=LN==='zh'?'生成PDF报告中...':'Generating PDF report...';
+  try{
+    const resp=await fetch(apiUrl('/report/pdf'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gdp_growth:g,unemployment:u,house_price_change:h,n_simulations:n,method:'monte_carlo',include_cycle:true,include_heatmap:false})});
+    if(!resp.ok)throw new Error('PDF generation failed');
+    const blob=await resp.blob();
+    const url=window.URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='LTR_Report_'+g.toFixed(0)+'p_'+u.toFixed(0)+'u_'+h.toFixed(0)+'h.pdf';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  }catch(e){alert('Error: '+e.message)}
+  document.getElementById('lod').classList.add('h');
+}
+
 // ====== GDP Sensitivity ======
 async function loadGDP(){
   const n=parseInt(document.getElementById('nsim').value)||2000;
@@ -350,7 +404,7 @@ async function loadGDP(){
     const pts=data.points,gdp=pts.map(p=>p.gdp_growth.toFixed(1)),el=pts.map(p=>+(p.mean_loss/1e6).toFixed(2)),lr=pts.map(p=>+(p.loss_rate*100).toFixed(2));
     gChart.setOption({
       tooltip:{trigger:'axis'},
-      legend:{data:['EL (M)','Loss Rate (%)'],textStyle:{color:'var(--t2)'},top:2},
+      legend:{data:[(LN==='zh'?'预期损失 (百万)':'EL (M)'),(LN==='zh'?'损失率 (%)':'Loss Rate (%)')],textStyle:{color:'var(--t2)'},top:2},
       grid:{left:55,right:25,top:35,bottom:30},
       xAxis:{type:'category',data:gdp,axisLabel:{color:'var(--t2)',fontSize:10},axisLine:{lineStyle:{color:'var(--b)'}}},
       yAxis:[{type:'value',axisLabel:{color:'var(--t2)',fontSize:10},splitLine:{lineStyle:{color:'var(--b)',type:'dashed'}}},{type:'value',axisLabel:{color:'var(--t2)',fontSize:10},splitLine:{show:false}}],
@@ -425,6 +479,228 @@ function runYear(){
   const g=document.getElementById('gdp'),u=document.getElementById('unemp'),h=document.getElementById('hpc');
   g.value=p.gdp_growth;u.value=p.unemployment;h.value=p.house_price_change;
   u();r();
+}
+
+// ====== Heatmap (Plotly) ======
+function getPlotlyTheme(){
+  const t=getEffectiveTheme();
+  return t==='dark'?'plotly_dark':'plotly';
+}
+async function loadHeatmap(){
+  const n=parseInt(document.getElementById('nsim').value)||2000;
+  const btn=document.getElementById('btn-heatmap-run');
+  const prog=document.getElementById('hm-progress');
+  const pbar=document.getElementById('hm-pbar');
+  const hint=document.getElementById('hm-hint');
+  prog.style.display='block';
+  pbar.style.width='5%';
+  hint.style.display='block';
+  hint.textContent=LN==='zh'?'请耐心等待，正在计算 400 个网格点...':'Please wait, computing 400 grid points...';
+  btn.disabled=true;
+  try{
+    // Show initial status
+    pbar.style.width='15%';
+    // Use 12x12 grid (144 points) with 500 sims each for reasonable performance
+    const hmSims=Math.min(n,500);
+    const hmGrid=12;
+    hint.textContent=LN==='zh'?`计算 ${hmGrid}×${hmGrid}=${hmGrid*hmGrid} 个网格点 (${hmSims}次模拟/点)...`:`Computing ${hmGrid}×${hmGrid}=${hmGrid*hmGrid} grid points (${hmSims} sims/point)...`;
+    const resp=await fetch(apiUrl('/simulate/heatmap'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      unemp_min:3, unemp_max:12, hp_min:-20, hp_max:10,
+      grid_size:hmGrid, gdp_growth:2.0, n_simulations:hmSims
+    })});
+    pbar.style.width='80%';
+    if(!resp.ok){
+      const errText=await resp.text();
+      throw new Error('Heatmap failed: '+resp.status+' '+errText);
+    }
+    heatmapData=await resp.json();
+    pbar.style.width='95%';
+
+    // Get current unemployment and house price for star marker
+    const curUnemp=parseFloat(document.getElementById('unemp').value);
+    const curHP=parseFloat(document.getElementById('hpc').value);
+    heatmapData.current_unemployment=curUnemp;
+    heatmapData.current_hp=curHP;
+
+    renderHeatmap(heatmapData);
+    pbar.style.width='100%';
+    hint.textContent=LN==='zh'?'✅ 热力图加载完成 | 双击任意位置跳转滑块并重新模拟':'✅ Heatmap loaded | Double-click to jump sliders & re-run';
+    setTimeout(()=>{prog.style.display='none'},2000);
+  }catch(e){
+    hint.textContent='Error: '+e.message;
+    prog.style.display='none';
+  }
+  btn.disabled=false;
+}
+
+function renderHeatmap(data){
+  const div=document.getElementById('heatmap-chart');
+
+  // Build Plotly heatmap trace
+  const zLossRate=data.loss_rate_matrix; // 20x20 matrix of loss rate percentages
+  const xVals=data.X[0]; // unemployment values
+  const yVals=[]; // house price values (reversed for correct orientation)
+  for(let i=0;i<data.Y.length;i++)yVals.push(data.Y[i][0]);
+  yVals.reverse();
+
+  // Reverse z to match y axis
+  const zReversed=[...zLossRate].reverse();
+
+  // Color scale: RdYlGn_r (red=bad, green=good)
+  const colorScale=[
+    [0,'#006837'],    // very low loss
+    [0.15,'#1a9850'],
+    [0.3,'#66bd63'],
+    [0.45,'#a6d96a'],
+    [0.55,'#d9ef8b'],
+    [0.65,'#fee08b'],
+    [0.75,'#fdae61'],
+    [0.85,'#f46d43'],
+    [0.93,'#d73027'],
+    [1,'#a50026'],    // very high loss
+  ];
+
+  const traceHeatmap={
+    z:zReversed,
+    x:xVals,
+    y:yVals,
+    type:'heatmap',
+    colorscale:colorScale,
+    zsmooth:'best',
+    colorbar:{
+      title:{text:'Loss Rate (%)',font:{color:'var(--t2)',size:12}},
+      tickfont:{color:'var(--t2)',size:10},
+    },
+    hovertemplate:'Unemp: %{x:.1f}%<br>HP: %{y:.1f}%<br>Loss Rate: %{z:.2f}%<extra></extra>',
+  };
+
+  // Contour lines (extracted from data.contours)
+  const contourTraces=[];
+  if(data.contours && data.contours.length>0){
+    // Only show 8% contour (capital threshold) and 6% contour
+    const levelsToShow=[6.0,8.0,10.0];
+    levelsToShow.forEach(level=>{
+      const contours=data.contours.filter(c=>Math.abs(c.level-level)<0.01);
+      contours.forEach((c,i)=>{
+        if(c.xs.length<3)return;
+        contourTraces.push({
+          x:c.xs,
+          y:c.ys,
+          type:'scatter',
+          mode:'lines',
+          line:{
+            color: level===8.0 ? '#000000' : '#555555',
+            width: level===8.0 ? 2.5 : 1.5,
+            dash: level===8.0 ? 'solid' : 'dot',
+          },
+          name: level===8.0 ? '⚠ Capital Threshold (8%)' : level+'% Loss Rate',
+          hovertemplate: level===8.0 ? '⚠ Capital Adequacy Boundary<br>Loss Rate: %{z:.1f}%<extra></extra>' : 'Loss Rate: '+level+'%<extra></extra>',
+        });
+      });
+    });
+  }
+
+  // Current position star marker
+  const starTrace={
+    x:[data.current_unemployment],
+    y:[data.current_hp],
+    type:'scatter',
+    mode:'markers',
+    marker:{
+      symbol:'star',
+      size:18,
+      color:'#ef4444',
+      line:{color:'#dc2626',width:2},
+    },
+    name:'Current Position',
+    hovertemplate:'<b>Current</b><br>Unemp: %{x:.1f}%<br>HP: %{y:.1f}%<extra></extra>',
+  };
+
+  // Layout
+  const isDark=getEffectiveTheme()==='dark';
+  const layout={
+    plot_bgcolor: isDark ? '#121b2d' : '#ffffff',
+    paper_bgcolor: isDark ? '#121b2d' : '#ffffff',
+    font:{color: isDark ? '#e2e8f0' : '#0f172a', size:11},
+    margin:{l:60,r:30,t:30,b:50},
+    xaxis:{
+      title:{text:LN==='zh'?'失业率 (%)':'Unemployment Rate (%)',font:{size:12}},
+      tickfont:{size:10},
+      gridcolor: isDark ? '#1e3456' : '#e2e8f0',
+      zerolinecolor: isDark ? '#2a4a6a' : '#cbd5e1',
+    },
+    yaxis:{
+      title:{text:LN==='zh'?'房价 / 二手车价格变化 (%)':'Asset Price Change (%)',font:{size:12}},
+      tickfont:{size:10},
+      gridcolor: isDark ? '#1e3456' : '#e2e8f0',
+      zerolinecolor: isDark ? '#2a4a6a' : '#cbd5e1',
+    },
+    hovermode:'closest',
+    showlegend: true,
+    legend:{
+      orientation:'h',
+      y:-0.12,
+      font:{size:9},
+      bgcolor: isDark ? 'rgba(18,27,45,0.8)' : 'rgba(255,255,255,0.8)',
+    },
+    dragmode:'zoom',
+  };
+
+  const config={
+    responsive:true,
+    displayModeBar:true,
+    modeBarButtonsToRemove:['lasso2d','select2d','autoScale2d'],
+    displaylogo:false,
+  };
+
+  Plotly.newPlot(div, [traceHeatmap, starTrace, ...contourTraces], layout, config);
+
+  // Double-click callback: set sliders to clicked position and re-run
+  div.on('plotly_doubleclick', function(eventData){
+    // Get click coordinates from the plot
+    const xaxis=document.getElementById('heatmap-chart')._fullLayout.xaxis;
+    const yaxis=document.getElementById('heatmap-chart')._fullLayout.yaxis;
+
+    // Try to get the click point
+    try{
+      const pt=eventData.points[0];
+      if(pt){
+        const unempClick=pt.x;
+        const hpClick=pt.y;
+
+        // Clamp to slider ranges
+        const unempClamped=Math.min(15,Math.max(2,Math.round(unempClick*10)/10));
+        const hpClamped=Math.min(15,Math.max(-20,Math.round(hpClick*5)/5));
+
+        // Set sliders
+        document.getElementById('unemp').value=unempClamped;
+        document.getElementById('hpc').value=hpClamped;
+
+        // Update display and re-run simulation
+        u();r();
+
+        // Update star marker position
+        Plotly.restyle(div, {x:[[unempClamped]], y:[[hpClamped]]}, 1);
+      }
+    }catch(e){
+      // Fallback: use plot coordinates
+      try{
+        const bbox=div.getBoundingClientRect();
+        const xPct=(eventData.clientX-bbox.left)/bbox.width;
+        const yPct=1-(eventData.clientY-bbox.top)/bbox.height;
+        if(xPct>0&&xPct<1&&yPct>0&&yPct<1){
+          const xRange=xaxis.range;
+          const yRange=yaxis.range;
+          const unempVal=Math.round((xRange[0]+(xRange[1]-xRange[0])*xPct)*10)/10;
+          const hpVal=Math.round((yRange[0]+(yRange[1]-yRange[0])*yPct)*5)/5;
+          document.getElementById('unemp').value=Math.min(15,Math.max(2,unempVal));
+          document.getElementById('hpc').value=Math.min(15,Math.max(-20,hpVal));
+          u();r();
+          Plotly.restyle(div, {x:[[parseFloat(document.getElementById('unemp').value)]], y:[[parseFloat(document.getElementById('hpc').value)]]}, 1);
+        }
+      }catch(e2){console.log('double-click coords error',e2)}
+    }
+  });
 }
 
 // ====== Init ======
